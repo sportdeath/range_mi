@@ -21,7 +21,8 @@ std::uniform_real_distribution<double> dist(0.,1.);
 
 void random_cells(
     std::vector<OccupancyState> & states,
-    std::vector<double> & widths) {
+    std::vector<double> & widths,
+    std::vector<double> & p_not_measured) {
 
   for (size_t i = 0; i < states.size(); i++) {
     // Construct the occupancy states
@@ -37,6 +38,10 @@ void random_cells(
 
     // Make the cell widths random numbers in [0,1]
     widths[i] = dist(gen);
+
+    // Make the probability that a cell has not already
+    // been measured uniform in [0,1]
+    p_not_measured[i] = dist(gen);
   }
 }
 
@@ -44,6 +49,7 @@ int main() {
   // Initialize the inputs and outputs
   std::vector<OccupancyState> states(num_cells);
   std::vector<double> widths(num_cells);
+  std::vector<double> p_not_measured(num_cells);
   std::vector<double> mi_1d(num_cells);
 
   // Initialize the mutual information
@@ -51,14 +57,14 @@ int main() {
 
   for (int i = 0; i < num_iterations; i++) {
     // Generate random cells
-    random_cells(states, widths);
+    random_cells(states, widths, p_not_measured);
 
     // Compute the mutual information all at once
-    mi.d1(states.data(), widths.data(), num_cells, mi_1d.data());
+    mi.d1(states.data(), widths.data(), p_not_measured.data(), num_cells, mi_1d.data());
 
     // Compute the mutual information one at a time
     for (unsigned int j = 0; j < num_cells; j++) {
-      double mi_1d_cell = mi.d1(states.data() + j, widths.data() + j, num_cells);
+      double mi_1d_cell = mi.d1(states.data() + j, widths.data() + j, p_not_measured.data() + j, num_cells);
 
       double error = std::abs(mi_1d_cell - mi_1d[j]);
       if (error > 0.000001) {

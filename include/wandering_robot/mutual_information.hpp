@@ -22,6 +22,7 @@ class MutualInformation {
     double d1(
         const OccupancyState * const states,
         const double * const widths,
+        const double * const p_not_measured,
         unsigned int num_cells);
 
     /**
@@ -33,6 +34,7 @@ class MutualInformation {
     void d1(
         const OccupancyState * const states,
         const double * const widths,
+        const double * const p_not_measured,
         unsigned int num_cells,
         double * const mutual_information);
 
