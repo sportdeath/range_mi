@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+  <name>wandering_robot</name>
+  <version>0.0.0</version>
+  <description>Tools for automously exploring an unknown environment.</description>
+
+  <maintainer email="tfh@mit.edu">tfh</maintainer>
+
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+</package>

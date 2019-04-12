@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+
 ######################################
 # Compile the library >
 ######################################
@@ -34,16 +35,42 @@ install(DIRECTORY include/${PROJECT_NAME}
 # < End compile the library
 ######################################
 
-######################################
-# Compile the tests >
-######################################
 
+######################################
+# Add tests and ROS >
+######################################
 
 option(BUILD_TESTS "BUILD_TESTS" OFF)
 if (BUILD_TESTS)
   add_subdirectory(test)
 endif()
 
+if(DEFINED CATKIN_DEVEL_PREFIX)
+  # Find catkin
+  find_package(catkin REQUIRED COMPONENTS
+    roscpp
+    nav_msgs
+    geometry_msgs
+    )
+  catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES ${PROJECT_NAME}
+  )
+
+  # Build the nodes
+  add_subdirectory(node)
+
+  # Install the library
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+  install(DIRECTORY include/${PROJECT_NAME}/
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  )
+endif()
+
 ######################################
-# < End compile the tests
+# < End add tests and ROS
 ######################################

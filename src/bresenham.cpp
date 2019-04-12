@@ -25,13 +25,14 @@ void wandering_robot::bresenham(
   double * row_ = &row;
   if (std::abs(s) < 1/std::sqrt(2)) {
     // Predominant motion is along the x axis
-    error = std::fmod(col, 1.);
+    error = std::fmod(row, 1.);
     derror = std::abs(s/c);
   } else {
     // Predominant motion is along the y axis
-    error = std::fmod(row, 1.);
+    error = std::fmod(col, 1.);
     derror = std::abs(c/s);
     std::swap(col_, row_);
+    std::swap(row_step, col_step);
   }
 
   while (true) {
