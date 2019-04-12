@@ -18,6 +18,12 @@ class MutualInformation {
      * Compute the mutual information between the
      * occupancy states and a range measurement taken
      * from cell 0 pointing towards cells 1, 2, etc.
+     *
+     * The mutual information takes into account the
+     * probability that each cell has already been
+     * measured by another beam.
+     *
+     * The events are all considered to be independent
      */
     double d1(
         const OccupancyState * const states,
@@ -32,6 +38,19 @@ class MutualInformation {
      * i+1, i+2, etc.
      */
     void d1(
+        const OccupancyState * const states,
+        const double * const widths,
+        const double * const p_not_measured,
+        unsigned int num_cells,
+        double * const mutual_information);
+
+    double d2(
+        const OccupancyState * const states,
+        const double * const widths,
+        const double * const p_not_measured,
+        unsigned int num_cells);
+
+    void d2(
         const OccupancyState * const states,
         const double * const widths,
         const double * const p_not_measured,

@@ -39,8 +39,6 @@ void wandering_robot::MutualInformation::d1(
     double * const mutual_information) {
 
   // Loop backwards from the end of the sequence,
-  // keeping track of the length of unknown cells that
-  // the beams pass through before they hit occupied cells
   double mi = 0;
   for (int i = num_cells - 1; i >= 0; i--) {
     if (states[i] == OccupancyState::unknown) {
@@ -61,4 +59,77 @@ void wandering_robot::MutualInformation::d1(
     // Compute the mutual information
     mutual_information[i] = mi;
   }
+}
+
+double wandering_robot::MutualInformation::d2(
+    const OccupancyState * const states,
+    const double * const widths,
+    const double * const p_not_measured,
+    unsigned int num_cells) {
+
+  double mi = 0;
+  double total_length = 0;
+  double unknown_length = 0;
+  for (unsigned int i = 0; i < num_cells; i++) {
+
+    if (states[i] == OccupancyState::unknown) {
+
+      double e_width = std::exp(-poisson_rate * widths[i]);
+      double e_unknown = std::exp(-poisson_rate * unknown_length);
+
+      // Update the mutual information with a
+      // piece-wise integral over the region
+      mi +=
+        p_not_measured[i] *
+        e_unknown * (
+          1 - e_width * (
+            1 + poisson_rate * widths[i]
+          )
+          + total_length * poisson_rate * (
+            1 - e_width
+          )
+        );
+
+      // Increase the length of unknown regions the beam
+      // has traveled through
+      unknown_length += widths[i];
+    } else if (states[i] == OccupancyState::occupied) {
+      break;
+    }
+
+    // Increase the total length that the beam has traveled
+    total_length += widths[i];
+  }
+
+  // Use that to compute mutual information
+  return mi;
+}
+
+void wandering_robot::MutualInformation::d2(
+    const OccupancyState * const states,
+    const double * const widths,
+    const double * const p_not_measured,
+    unsigned int num_cells,
+    double * const mutual_information) {
+
+  // Loop backwards from the end of the sequence,
+  double a = 0, b = 0, c = 0;
+  for (int i = num_cells - 1; i >= 0; i--) {
+    if (states[i] == OccupancyState::unknown) {
+
+      double p_no_hit = std::exp(-poisson_rate * widths[i]);
+
+      a = p_not_measured[i] * (1 - p_no_hit * (1 + poisson_rate * widths[i])) + p_no_hit * a;
+      b = p_no_hit * (b + widths[i] * c);
+      c = p_not_measured[i] * poisson_rate * (1 - p_no_hit) + p_no_hit * c;
+    } else if (states[i] == OccupancyState::free) {
+      b += widths[i] * c;
+    } else {
+      a = 0; b = 0; c = 0;
+    }
+
+    // Compute the mutual information
+    mutual_information[i] = a + b;
+  }
+
 }

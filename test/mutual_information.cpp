@@ -50,7 +50,7 @@ int main() {
   std::vector<OccupancyState> states(num_cells);
   std::vector<double> widths(num_cells);
   std::vector<double> p_not_measured(num_cells);
-  std::vector<double> mi_1d(num_cells);
+  std::vector<double> mi_1d(num_cells), mi_2d(num_cells);
 
   // Initialize the mutual information
   MutualInformation mi(poisson_rate);
@@ -61,16 +61,25 @@ int main() {
 
     // Compute the mutual information all at once
     mi.d1(states.data(), widths.data(), p_not_measured.data(), num_cells, mi_1d.data());
+    mi.d2(states.data(), widths.data(), p_not_measured.data(), num_cells, mi_2d.data());
 
     // Compute the mutual information one at a time
     for (unsigned int j = 0; j < num_cells; j++) {
       double mi_1d_cell = mi.d1(states.data() + j, widths.data() + j, p_not_measured.data() + j, num_cells);
+      double mi_2d_cell = mi.d2(states.data() + j, widths.data() + j, p_not_measured.data() + j, num_cells);
 
-      double error = std::abs(mi_1d_cell - mi_1d[j]);
-      if (error > 0.000001) {
+      double error_1d = std::abs(mi_1d_cell - mi_1d[j]);
+      if (error_1d > 0.000001) {
         std::cout <<
           "MI from single computation: " << mi_1d_cell <<
           ", MI from joint computation " << mi_1d[j] << std::endl;
+        return -1;
+      }
+      double error_2d = std::abs(mi_2d_cell - mi_2d[j]);
+      if (error_2d > 0.000001) {
+        std::cout <<
+          "MI from single computation 2D: " << mi_2d_cell <<
+          ", MI from joint computation 2D: " << mi_2d[j] << std::endl;
         return -1;
       }
     }
