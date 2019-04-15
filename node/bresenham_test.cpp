@@ -18,6 +18,9 @@ class BresenhamTest {
       // Initialize the line point
       x = 0; y = 0; theta = 0;
 
+      // Initialize the beam sampler
+      bresenham = wandering_robot::Bresenham(height, width);
+
       // Construct a publisher
       map_pub = n.advertise<nav_msgs::OccupancyGrid>("/map", 1, true);
 
@@ -57,11 +60,8 @@ class BresenhamTest {
       // Compute Bresenham
       unsigned int num_cells;
       std::vector<unsigned int> line(std::max(height, width));
-      wandering_robot::bresenham(
-          y, x,
-          theta,
-          height,
-          width,
+      bresenham.line(
+          y, x, theta,
           line.data(),
           num_cells);
 
@@ -75,6 +75,7 @@ class BresenhamTest {
 
   private:
     double x, y, theta;
+    wandering_robot::Bresenham bresenham;
 
     ros::NodeHandle n;
     ros::Timer theta_timer;

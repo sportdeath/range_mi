@@ -3,12 +3,10 @@
 
 #include "wandering_robot/bresenham.hpp"
 
-void wandering_robot::bresenham(
+void wandering_robot::Bresenham::line(
     double row,
     double col,
     double theta,
-    unsigned int height,
-    unsigned int width,
     unsigned int * const line,
     unsigned int & num_cells) {
 
@@ -58,5 +56,36 @@ void wandering_robot::bresenham(
       *row_ += row_step;
       error -= 1;
     }
+  }
+}
+
+void wandering_robot::Bresenham::sample(
+    double & x,
+    double & y,
+    double & theta) {
+
+  // Choose a random point on the perimeter
+  double perimeter = dist_perimeter(gen);
+
+  if (perimeter < width) {
+    // On the bottom
+    theta = dist_theta(gen);
+    x = perimeter;
+    y = 0;
+  } else if (perimeter < 2 * width) {
+    // On the top
+    theta = dist_theta(gen) + M_PI;
+    x = perimeter - width;
+    y = height - 1;
+  } else if (perimeter < 2 * width + height) {
+    // On the left
+    theta = dist_theta(gen) - M_PI/2.;
+    y = perimeter - 2 * width;
+    x = 0;
+  } else {
+    // On the right
+    theta = dist_theta(gen) + M_PI/2.;
+    y = perimeter - 2 * width - height;
+    x = width - 1;
   }
 }
