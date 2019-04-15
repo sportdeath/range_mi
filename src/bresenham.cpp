@@ -64,28 +64,34 @@ void wandering_robot::Bresenham::sample(
     double & y,
     double & theta) {
 
-  // Choose a random point on the perimeter
-  double perimeter = dist_perimeter(gen);
+  // Only do the first quadrant for now
+  theta = (2 * M_PI) * dist(gen);
+  double s = std::sin(theta);
+  double c = std::cos(theta);
+  double s_abs = std::abs(s);
+  double c_abs = std::abs(c);
 
-  if (perimeter < width) {
-    // On the bottom
-    theta = dist_theta(gen);
-    x = perimeter;
-    y = 0;
-  } else if (perimeter < 2 * width) {
-    // On the top
-    theta = dist_theta(gen) + M_PI;
-    x = perimeter - width;
-    y = height - 1;
-  } else if (perimeter < 2 * width + height) {
-    // On the left
-    theta = dist_theta(gen) - M_PI/2.;
-    y = perimeter - 2 * width;
-    x = 0;
+  double normalized_width = s_abs * width;
+  double normalized_height = c_abs * height;
+
+  double choice = (normalized_width + normalized_height) * dist(gen);
+  if (choice < normalized_width) {
+    // Vertical
+    x = choice/s_abs;
+    if (s < 0) {
+      // Facing down
+      y = height - 1;
+    } else {
+      y = 0;
+    }
   } else {
-    // On the right
-    theta = dist_theta(gen) + M_PI/2.;
-    y = perimeter - 2 * width - height;
-    x = width - 1;
+    // Horizontal
+    y = (choice - normalized_width)/c_abs;
+    if (c < 0) {
+      // Facing left
+      x = width - 1;
+    } else {
+      x = 0;
+    }
   }
 }

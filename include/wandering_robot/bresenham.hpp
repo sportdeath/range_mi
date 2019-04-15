@@ -16,8 +16,7 @@ class Bresenham {
       // Initialize randomness
       std::random_device random_device;
       gen = std::mt19937(random_device());
-      dist_perimeter = std::uniform_real_distribution<double>(0., 2 * (height + width));
-      dist_theta = std::uniform_real_distribution<double>(0., M_PI);
+      dist = std::uniform_real_distribution<double>(0., 1.);
     }
 
     void line(
@@ -35,8 +34,7 @@ class Bresenham {
   private:
     unsigned int height, width;
     std::mt19937 gen;
-    std::uniform_real_distribution<double> dist_perimeter;
-    std::uniform_real_distribution<double> dist_theta;
+    std::uniform_real_distribution<double> dist;
 };
 
 }

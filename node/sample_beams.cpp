@@ -7,7 +7,7 @@
 
 unsigned int height = 100;
 unsigned int width = 200;
-double sample_rate = 0.001;
+double sample_rate = 0.000001;
 double refresh_rate = 0.04;
 
 class SampleBeams {
