@@ -1,24 +1,32 @@
 #include <ros/ros.h>
 
 #include <nav_msgs/OccupancyGrid.h>
+#include <geometry_msgs/PointStamped.h>
 
 #include "wandering_robot/bresenham.hpp"
 #include "wandering_robot/mutual_information.hpp"
-
-std::string map_topic = "/map";
-std::string mi_topic = "/mi";
-double poisson_rate = 0.1;
-unsigned int num_iterations = 10000000;
-unsigned int draw_rate = 100000;
-double epsilon = 0.1;
 
 class MutualInformationVisualizer {
 
   public:
 
     MutualInformationVisualizer() {
+      // Initialize the node handle
+      n = ros::NodeHandle("~");
+
+      // Fetch the ROS parameters
+      std::string mi_topic, mi_max_topic, map_topic;
+      n.getParam("mi_topic", mi_topic);
+      n.getParam("mi_max_topic", mi_max_topic);
+      n.getParam("map_topic", map_topic);
+      n.getParam("poisson_rate", poisson_rate);
+      n.getParam("num_beams", num_beams);
+      n.getParam("beams_per_draw", beams_per_draw);
+      n.getParam("unknown_threshold", unknown_threshold);
+
       // Construct a publisher for mutual information
       mi_pub = n.advertise<nav_msgs::OccupancyGrid>(mi_topic, 1, true);
+      mi_max_pub = n.advertise<geometry_msgs::PointStamped>(mi_max_topic, 1);
 
       // Subscribe to maps
       map_sub = n.subscribe(map_topic, 1, &MutualInformationVisualizer::map_callback, this);
@@ -34,9 +42,9 @@ class MutualInformationVisualizer {
         double value = map_msg.data[i]/100.;
         if (value < 0) {
           states[i] = wandering_robot::OccupancyState::unknown;
-        } else if (value < 0.5 - epsilon) {
+        } else if (value < 0.5 - unknown_threshold) {
           states[i] = wandering_robot::OccupancyState::free;
-        } else if (value > 0.5 + epsilon) {
+        } else if (value > 0.5 + unknown_threshold) {
           states[i] = wandering_robot::OccupancyState::occupied;
         } else {
           states[i] = wandering_robot::OccupancyState::unknown;
@@ -57,9 +65,10 @@ class MutualInformationVisualizer {
 
       double x, y, theta;
       unsigned int num_cells;
-      for (unsigned int i = 0; i < num_iterations; i++) {
-        if (i % draw_rate == 0) {
+      for (int i = 0; i < num_beams; i++) {
+        if (i % beams_per_draw == 0) {
           draw_map(map_msg, mi);
+          if (not ros::ok()) break;
         }
 
         // Randomly sample a point
@@ -86,9 +95,9 @@ class MutualInformationVisualizer {
       // Convert to int8
       nav_msgs::OccupancyGrid mi_msg;
       mi_msg.data = std::vector<int8_t>(map_msg.info.height * map_msg.info.width);
-      double mi_max = *std::max_element(mi.begin(), mi.end());
+      auto mi_max = std::max_element(mi.begin(), mi.end());
       for (size_t i = 0; i < mi_msg.data.size(); i++) {
-        mi_msg.data[i] = 100 * (1 - mi[i]/mi_max);
+        mi_msg.data[i] = 100 * (1 - mi[i]/(*mi_max));
       }
 
       // Add info
@@ -98,12 +107,26 @@ class MutualInformationVisualizer {
 
       // Publish
       mi_pub.publish(mi_msg);
+
+      // Plot the position of the maximum mutual information
+      geometry_msgs::PointStamped mi_max_msg;
+      mi_max_msg.header = mi_msg.header;
+      unsigned int mi_max_cell = std::distance(mi.begin(), mi_max);
+      unsigned int y = mi_max_cell/mi_msg.info.width;
+      unsigned int x = mi_max_cell - y * mi_msg.info.width;
+      mi_max_msg.point.x = x * mi_msg.info.resolution;
+      mi_max_msg.point.y = y * mi_msg.info.resolution;
+      mi_max_pub.publish(mi_max_msg);
     }
 
   private:
     ros::NodeHandle n;
     ros::Subscriber map_sub;
-    ros::Publisher mi_pub;
+    ros::Publisher mi_pub, mi_max_pub;
+
+    // Parameters
+    double poisson_rate, unknown_threshold;
+    int num_beams, beams_per_draw;
 };
 
 int main(int argc, char ** argv) {

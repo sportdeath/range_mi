@@ -76,18 +76,18 @@ void wandering_robot::Bresenham::sample(
     x = choice/s_abs;
     if (s < 0) {
       // Facing down
-      y = height - 1;
+      y = height - dist(gen);
     } else {
-      y = 0;
+      y = dist(gen);
     }
   } else {
     // Horizontal
     y = (choice - normalized_width)/c_abs;
     if (c < 0) {
       // Facing left
-      x = width - 1;
+      x = width - dist(gen);
     } else {
-      x = 0;
+      x = dist(gen);
     }
   }
 }

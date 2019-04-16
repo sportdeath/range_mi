@@ -1,0 +1,7 @@
+mi_max_topic: "/mi_max"
+map_topic: "/map"
+mi_topic: "/mi"
+poisson_rate: 0.1
+num_beams: 100000000
+beams_per_draw: 10000
+unknown_threshold: 0.1

@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="wandering_robot" name="mi_visualizer" type="mi_visualizer" output="screen">
+    <rosparam command="load" file="$(find wandering_robot)/launch/params.yaml"/>
+  </node>
+</launch>
