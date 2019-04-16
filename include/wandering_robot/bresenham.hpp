@@ -20,8 +20,8 @@ class Bresenham {
     }
 
     void line(
-        double row,
         double col,
+        double row,
         double theta,
         unsigned int * const line,
         unsigned int & num_cells);

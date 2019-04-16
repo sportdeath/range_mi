@@ -37,7 +37,7 @@ int main() {
     // Compute Bresenham's line
     unsigned int num_cells;
     bresenham.line(
-        y, x, theta,
+        x, y, theta,
         line.data(),
         num_cells);
 

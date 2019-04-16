@@ -4,8 +4,8 @@
 #include "wandering_robot/bresenham.hpp"
 
 void wandering_robot::Bresenham::line(
-    double row,
     double col,
+    double row,
     double theta,
     unsigned int * const line,
     unsigned int & num_cells) {
@@ -35,19 +35,15 @@ void wandering_robot::Bresenham::line(
 
   while (true) {
 
-    if (row < 0 ||
-        col < 0 ||
-        row >= height ||
+    if (row < 0 or
+        col < 0 or
+        row >= height or
         col >= width)
       // Outside the map, stop casting!
       break;
 
-    // Compute the hit entry
-    unsigned int hit_cell = std::floor(row) * width + std::floor(col);
-
     // Add the hit cell
-    line[num_cells] = hit_cell;
-    num_cells++;
+    line[num_cells++] = ((unsigned int) row) * width + ((unsigned int) col);
 
     // Move to the next cell
     error += derror;
