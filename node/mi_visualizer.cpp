@@ -7,7 +7,7 @@
 
 std::string map_topic = "/map";
 std::string mi_topic = "/mi";
-double poisson_rate = 0.001;
+double poisson_rate = 0.1;
 unsigned int num_iterations = 10000000;
 unsigned int draw_rate = 100000;
 double epsilon = 0.1;
