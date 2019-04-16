@@ -42,6 +42,7 @@ install(DIRECTORY include/${PROJECT_NAME}
 
 option(BUILD_TESTS "BUILD_TESTS" OFF)
 if (BUILD_TESTS)
+  include_directories(test)
   add_subdirectory(test)
 endif()
 

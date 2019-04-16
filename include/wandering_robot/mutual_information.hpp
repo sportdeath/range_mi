@@ -57,6 +57,28 @@ class MutualInformation {
         unsigned int num_cells,
         double * const mutual_information);
 
+    /**
+     * Compute mutual information for a grid
+     */
+    void d2_grid(
+        const OccupancyState * const states,
+        const double * const p_not_measured,
+        const unsigned int * const line,
+        double theta,
+        unsigned int num_cells,
+        double * const mutual_information);
+
+    /**
+     * Update step for mutual information computation
+     */
+    void d2_update(
+        double & a, double & b, double & c,
+        double state,
+        double width,
+        double p_not_measured,
+        double p_no_hit,
+        double & mutual_information);
+
   private:
 
     /**

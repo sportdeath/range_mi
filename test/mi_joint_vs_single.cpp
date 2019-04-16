@@ -1,4 +1,3 @@
-#include <random>
 #include <vector>
 #include <iostream>
 #include <chrono>
@@ -6,45 +5,14 @@
 #include <wandering_robot/occupancy_state.hpp>
 #include <wandering_robot/mutual_information.hpp>
 
+#include "random_inputs.hpp"
+
 using namespace wandering_robot;
 
 // Initialize constants
 double poisson_rate = 0.1234;
 int num_iterations = 1000;
 size_t num_cells = 1000;
-double p_occupied = 0.05;
-double p_unknown = 0.5;
-
-// Initialize random generator
-std::random_device random_device;
-std::mt19937 gen(random_device());
-std::uniform_real_distribution<double> dist(0.,1.);
-
-void random_cells(
-    std::vector<OccupancyState> & states,
-    std::vector<double> & widths,
-    std::vector<double> & p_not_measured) {
-
-  for (size_t i = 0; i < states.size(); i++) {
-    // Construct the occupancy states
-    // according to their probability
-    double probability = dist(gen);
-    if (probability < p_occupied) {
-      states[i] = OccupancyState::occupied;
-    } else if (probability < p_occupied + p_unknown) {
-      states[i] = OccupancyState::unknown;
-    } else {
-      states[i] = OccupancyState::free;
-    }
-
-    // Make the cell widths random numbers in [0,1]
-    widths[i] = dist(gen);
-
-    // Make the probability that a cell has not already
-    // been measured uniform in [0,1]
-    p_not_measured[i] = dist(gen);
-  }
-}
 
 int main() {
   // Initialize the inputs and outputs
@@ -63,7 +31,13 @@ int main() {
 
   for (int i = 0; i < num_iterations; i++) {
     // Generate random cells
-    random_cells(states, widths, p_not_measured);
+    random_states(states);
+    random_probabilities(widths);
+    random_probabilities(p_not_measured);
+
+    // Clear MI
+    std::fill(mi_1d.begin(), mi_1d.end(), 0);
+    std::fill(mi_2d.begin(), mi_2d.end(), 0);
 
     // Compute the mutual information all at once
 
