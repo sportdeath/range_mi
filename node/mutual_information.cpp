@@ -7,7 +7,7 @@
 
 std::string map_topic = "/map";
 std::string mi_topic = "/mi";
-double poisson_rate = 0.05;
+double poisson_rate = 0.001;
 unsigned int num_iterations = 10000000;
 unsigned int draw_rate = 100000;
 double epsilon = 0.1;
@@ -43,6 +43,9 @@ class MutualInformationVisualizer {
         }
       }
 
+      // Add independence
+      std::vector<double> p_not_measured(height * width, 1);
+
       // Initialize the beam sampler and mutual information
       wandering_robot::Bresenham bresenham(height, width);
       wandering_robot::MutualInformation mi_(poisson_rate);
@@ -50,12 +53,10 @@ class MutualInformationVisualizer {
       // Initialize a map and a line
       unsigned int line_length = std::max(height, width);
       std::vector<unsigned int> line(line_length);
-      std::vector<double> line_widths(line_length), line_p_not_measured(line_length);
-      std::vector<double> line_mi(line_length);
-      std::vector<wandering_robot::OccupancyState> line_states(line_length);
       std::vector<double> mi(height * width, 0);
 
       double x, y, theta;
+      unsigned int num_cells;
       for (unsigned int i = 0; i < num_iterations; i++) {
         if (i % draw_rate == 0) {
           draw_map(map_msg, mi);
@@ -65,33 +66,19 @@ class MutualInformationVisualizer {
         bresenham.sample(x, y, theta);
 
         // Compute Bresenham's line
-        unsigned int num_cells;
         bresenham.line(
-            y, x, theta,
+            x, y, theta,
             line.data(),
             num_cells);
 
-        // Compute width
-        double sc = std::max(std::abs(std::sin(theta)), std::abs(std::cos(theta)));
-        double width = 1./sc;
-
-        for (unsigned int j = 0; j < num_cells; j++) {
-          line_states[j] = states[line[j]];
-          line_widths[j] = width;
-          line_p_not_measured[j] = 1;
-        }
-
         // Make vectors of the states, etc.
-        mi_.d2(
-            line_states.data(),
-            line_widths.data(),
-            line_p_not_measured.data(),
+        mi_.d2_grid(
+            states.data(),
+            p_not_measured.data(),
+            line.data(),
+            theta,
             num_cells,
-            line_mi.data());
-
-        for (unsigned int j = 0; j < num_cells; j++) {
-          mi[line[j]] += line_mi[j];
-        }
+            mi.data());
       }
     }
 
