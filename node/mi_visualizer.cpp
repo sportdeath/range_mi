@@ -23,6 +23,7 @@ class MutualInformationVisualizer {
       n.getParam("num_beams", num_beams);
       n.getParam("beams_per_draw", beams_per_draw);
       n.getParam("unknown_threshold", unknown_threshold);
+      n.getParam("beam_independence", beam_independence);
 
       // Construct a publisher for mutual information
       mi_pub = n.advertise<nav_msgs::OccupancyGrid>(mi_topic, 1, true);
@@ -81,13 +82,23 @@ class MutualInformationVisualizer {
             num_cells);
 
         // Make vectors of the states, etc.
-        mi_.d2_grid(
-            states.data(),
-            p_not_measured.data(),
-            line.data(),
-            theta,
-            num_cells,
-            mi.data());
+        if (beam_independence) {
+          mi_.d2_grid(
+              states.data(),
+              p_not_measured.data(),
+              line.data(),
+              theta,
+              num_cells,
+              mi.data());
+        } else {
+          mi_.d1_grid(
+              states.data(),
+              p_not_measured.data(),
+              line.data(),
+              theta,
+              num_cells,
+              mi.data());
+        }
       }
     }
 
@@ -127,6 +138,7 @@ class MutualInformationVisualizer {
     // Parameters
     double poisson_rate, unknown_threshold;
     int num_beams, beams_per_draw;
+    bool beam_independence;
 };
 
 int main(int argc, char ** argv) {
