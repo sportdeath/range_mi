@@ -4,13 +4,13 @@
 
 namespace wandering_robot {
 
-class Bresenham {
+class GridLine2D {
 
   public:
 
-    Bresenham() {}
+    GridLine2D() {}
 
-    Bresenham(unsigned int height_, unsigned int width_)
+    GridLine2D(unsigned int height_, unsigned int width_)
       : height(height_), width(width_) {
 
       // Initialize randomness
@@ -19,11 +19,12 @@ class Bresenham {
       dist = std::uniform_real_distribution<double>(0., 1.);
     }
 
-    void line(
+    void draw(
         double col,
         double row,
         double theta,
         unsigned int * const line,
+        double * const widths,
         unsigned int & num_cells);
 
     void sample(

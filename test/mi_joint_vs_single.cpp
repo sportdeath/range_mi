@@ -20,6 +20,10 @@ int main() {
   std::vector<double> widths(num_cells);
   std::vector<double> p_not_measured(num_cells);
   std::vector<double> mi_1d(num_cells), mi_2d(num_cells);
+  std::vector<unsigned int> line(num_cells);
+
+  // Make the line 0...num_cells -1
+  std::iota(line.begin(), line.end(), 0);
 
   // Initialize timing
   std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -43,13 +47,13 @@ int main() {
 
     // In 1 dimension ...
     start = std::chrono::system_clock::now();
-    mi.d1(states.data(), widths.data(), p_not_measured.data(), num_cells, mi_1d.data());
+    mi.d1(states.data(), widths.data(), p_not_measured.data(), line.data(), num_cells, mi_1d.data());
     end = std::chrono::system_clock::now();
     time_1d_joint += std::chrono::duration<double>(end - start).count();
 
     // ... and in 2 dimensions.
     start = std::chrono::system_clock::now();
-    mi.d2(states.data(), widths.data(), p_not_measured.data(), num_cells, mi_2d.data());
+    mi.d2(states.data(), widths.data(), p_not_measured.data(), line.data(), num_cells, mi_2d.data());
     end = std::chrono::system_clock::now();
     time_2d_joint += std::chrono::duration<double>(end - start).count();
 
