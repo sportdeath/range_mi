@@ -3,7 +3,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/PointStamped.h>
 
-#include "wandering_robot/bresenham.hpp"
+#include "wandering_robot/grid_line_2d.hpp"
 #include "wandering_robot/mutual_information.hpp"
 
 class MutualInformationVisualizer {
@@ -56,12 +56,13 @@ class MutualInformationVisualizer {
       std::vector<double> p_not_measured(height * width, 1);
 
       // Initialize the beam sampler and mutual information
-      wandering_robot::Bresenham bresenham(height, width);
+      wandering_robot::GridLine2D grid_line(height, width);
       wandering_robot::MutualInformation mi_(poisson_rate);
 
       // Initialize a map and a line
-      unsigned int line_length = std::max(height, width);
+      unsigned int line_length = 2 * std::max(height, width);
       std::vector<unsigned int> line(line_length);
+      std::vector<double> widths(line_length);
       std::vector<double> mi(height * width, 0);
 
       double x, y, theta;
@@ -73,29 +74,31 @@ class MutualInformationVisualizer {
         }
 
         // Randomly sample a point
-        bresenham.sample(x, y, theta);
+        grid_line.sample(x, y, theta);
 
-        // Compute Bresenham's line
-        bresenham.line(
+        // Compute the intersections of
+        // the line with the grid
+        grid_line.draw(
             x, y, theta,
             line.data(),
+            widths.data(),
             num_cells);
 
         // Make vectors of the states, etc.
         if (beam_independence) {
-          mi_.d2_grid(
+          mi_.d2(
               states.data(),
+              widths.data(),
               p_not_measured.data(),
               line.data(),
-              theta,
               num_cells,
               mi.data());
         } else {
-          mi_.d1_grid(
+          mi_.d1(
               states.data(),
+              widths.data(),
               p_not_measured.data(),
               line.data(),
-              theta,
               num_cells,
               mi.data());
         }

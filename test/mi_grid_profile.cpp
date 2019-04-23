@@ -35,7 +35,8 @@ int main() {
     // Randomly sample a point
     grid_line.sample(x, y, theta);
 
-    // Compute Bresenham's line
+    // Compute the intersections of
+    // the line with the grid
     unsigned int num_cells;
     grid_line.draw(
         x, y, theta,
