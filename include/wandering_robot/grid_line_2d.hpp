@@ -1,6 +1,7 @@
 #pragma once
 
 #include <random>
+#include <algorithm>
 
 namespace wandering_robot {
 
@@ -31,6 +32,10 @@ class GridLine2D {
         double & x, 
         double & y, 
         double & theta);
+
+    unsigned int size() {
+      return 2 * std::max(height, width);
+    }
 
   private:
     unsigned int height, width;

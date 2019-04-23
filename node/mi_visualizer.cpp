@@ -60,9 +60,8 @@ class MutualInformationVisualizer {
       wandering_robot::MutualInformation mi_(poisson_rate);
 
       // Initialize a map and a line
-      unsigned int line_length = 2 * std::max(height, width);
-      std::vector<unsigned int> line(line_length);
-      std::vector<double> widths(line_length);
+      std::vector<unsigned int> line(grid_line.size());
+      std::vector<double> widths(grid_line.size());
       std::vector<double> mi(height * width, 0);
 
       double x, y, theta;
