@@ -1,6 +1,7 @@
+mi_topic: "/mi"
 mi_max_topic: "/mi_max"
 map_topic: "/map"
-mi_topic: "/mi"
+click_topic: "/clicked_point"
 poisson_rate: 0.1
 num_beams: 100000000
 beams_per_draw: 10000

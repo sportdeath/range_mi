@@ -1,7 +1,7 @@
 #include <vector>
 #include <cassert>
 
-#include <wandering_robot/grid_line_2d.hpp>
+#include <wandering_robot/grid_line.hpp>
 
 using namespace wandering_robot;
 
@@ -12,7 +12,7 @@ std::vector<double> widths(max_cells);
 unsigned int num_cells;
 
 void axis() {
-  GridLine2D grid_line(10, 10);
+  GridLine grid_line(10, 10);
 
   grid_line.draw(0, 0, 0, line.data(), widths.data(), num_cells);
 
@@ -30,7 +30,7 @@ void axis() {
 }
 
 void diagonal() {
-  GridLine2D grid_line(10, 10);
+  GridLine grid_line(10, 10);
   grid_line.draw(0, 0, M_PI/4., line.data(), widths.data(), num_cells);
 
   unsigned int ii = 0;

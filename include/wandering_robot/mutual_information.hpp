@@ -11,6 +11,7 @@ class MutualInformation {
     /**
      * Initialize
      */
+    MutualInformation() {}
     MutualInformation(double poisson_rate_)
       : poisson_rate(poisson_rate_) {}
 

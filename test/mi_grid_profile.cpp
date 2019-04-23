@@ -1,7 +1,6 @@
 #include <vector>
 
-#include <wandering_robot/grid_line_2d.hpp>
-#include <wandering_robot/mutual_information.hpp>
+#include <wandering_robot/grid_wanderer.hpp>
 
 #include "random_inputs.hpp"
 
@@ -12,44 +11,15 @@ unsigned int width = 500;
 unsigned int num_iterations = 10000;
 
 int main() {
-  // Initialize states and probabilities
+  // Initialize the wanderer
+  wandering_robot::GridWanderer w(poisson_rate);
+
+  // Initialize random states
   std::vector<OccupancyState> states(height * width);
-  std::vector<double> p_not_measured(height * width);
-  std::vector<double> mi(height * width, 0);
-
-  // Make random states
   random_states(states);
-  random_probabilities(p_not_measured);
+  w.set_map(states, height, width);
 
-  // Initialize the beam sampler and mutual information
-  wandering_robot::MutualInformation mi_(poisson_rate);
-  wandering_robot::GridLine2D grid_line(height, width);
-
-  // Initialize the line
-  std::vector<unsigned int> line(grid_line.size());
-  std::vector<double> widths(grid_line.size());
-
-  double x, y, theta;
   for (unsigned int i = 0; i < num_iterations; i++) {
-    // Randomly sample a point
-    grid_line.sample(x, y, theta);
-
-    // Compute the intersections of
-    // the line with the grid
-    unsigned int num_cells;
-    grid_line.draw(
-        x, y, theta,
-        line.data(),
-        widths.data(),
-        num_cells);
-
-    // Make vectors of the states, etc.
-    mi_.d2(
-        states.data(),
-        widths.data(),
-        p_not_measured.data(),
-        line.data(),
-        num_cells,
-        mi.data());
+    w.iterate_mi();
   }
 }

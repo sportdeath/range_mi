@@ -1,9 +1,9 @@
 #include <cmath>
 #include <utility>
 
-#include "wandering_robot/grid_line_2d.hpp"
+#include "wandering_robot/grid_line.hpp"
 
-void wandering_robot::GridLine2D::draw(
+void wandering_robot::GridLine::draw(
     double x,
     double y,
     double theta,
@@ -68,7 +68,7 @@ void wandering_robot::GridLine2D::draw(
   }
 }
 
-void wandering_robot::GridLine2D::sample(
+void wandering_robot::GridLine::sample(
     double & x,
     double & y,
     double & theta) {

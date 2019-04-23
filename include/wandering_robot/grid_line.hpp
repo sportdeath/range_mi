@@ -5,13 +5,13 @@
 
 namespace wandering_robot {
 
-class GridLine2D {
+class GridLine {
 
   public:
 
-    GridLine2D() {}
+    GridLine() {}
 
-    GridLine2D(unsigned int height_, unsigned int width_)
+    GridLine(unsigned int height_, unsigned int width_)
       : height(height_), width(width_) {
 
       // Initialize randomness
