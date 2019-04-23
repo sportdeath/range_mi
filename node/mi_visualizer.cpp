@@ -14,10 +14,12 @@ class MutualInformationVisualizer {
       n = ros::NodeHandle("~");
 
       // Fetch the ROS parameters
-      std::string mi_topic, mi_max_topic, map_topic, click_topic;
+      std::string mi_topic, p_not_measured_topic, mi_max_topic;
+      std::string map_topic, click_topic;
       double poisson_rate;
       bool beam_independence;
       n.getParam("mi_topic", mi_topic);
+      n.getParam("p_not_measured_topic", p_not_measured_topic);
       n.getParam("mi_max_topic", mi_max_topic);
       n.getParam("map_topic", map_topic);
       n.getParam("click_topic", click_topic);
@@ -32,6 +34,7 @@ class MutualInformationVisualizer {
 
       // Construct a publisher for mutual information
       mi_pub = n.advertise<nav_msgs::OccupancyGrid>(mi_topic, 1, true);
+      p_not_measured_pub = n.advertise<nav_msgs::OccupancyGrid>(p_not_measured_topic, 1, true);
       mi_max_pub = n.advertise<geometry_msgs::PointStamped>(mi_max_topic, 1);
 
       // Subscribe to maps and clicked points
@@ -78,7 +81,7 @@ class MutualInformationVisualizer {
     }
 
     void draw_map() {
-      // Convert to int8
+      // Construct a message for the mutual information surface
       nav_msgs::OccupancyGrid mi_msg;
       mi_msg.data = std::vector<int8_t>(map_info.height * map_info.width);
       auto mi_max = std::max_element(w.mi().begin(), w.mi().end());
@@ -94,6 +97,14 @@ class MutualInformationVisualizer {
       // Publish
       mi_pub.publish(mi_msg);
 
+      // Do the same for p_not measured
+      nav_msgs::OccupancyGrid p_not_measured_msg = mi_msg;
+      auto p_not_measured_max = std::max_element(w.p_not_measured().begin(), w.p_not_measured().end());
+      for (size_t i = 0; i < p_not_measured_msg.data.size(); i++) {
+        p_not_measured_msg.data[i] = 100 * (1 - w.p_not_measured()[i]/(*p_not_measured_max));
+      }
+      p_not_measured_pub.publish(p_not_measured_msg);
+
       // Plot the position of the maximum mutual information
       geometry_msgs::PointStamped mi_max_msg;
       mi_max_msg.header = mi_msg.header;
@@ -108,7 +119,7 @@ class MutualInformationVisualizer {
   private:
     ros::NodeHandle n;
     ros::Subscriber map_sub, click_sub;
-    ros::Publisher mi_pub, mi_max_pub;
+    ros::Publisher mi_pub, p_not_measured_pub, mi_max_pub;
 
     // Parameters
     double unknown_threshold;

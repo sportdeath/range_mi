@@ -1,4 +1,5 @@
 mi_topic: "/mi"
+p_not_measured_topic: "/p_not_measured"
 mi_max_topic: "/mi_max"
 map_topic: "/map"
 click_topic: "/clicked_point"
