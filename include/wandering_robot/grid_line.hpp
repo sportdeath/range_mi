@@ -29,9 +29,16 @@ class GridLine {
         unsigned int & num_cells);
 
     void sample(
-        double & x, 
-        double & y, 
+        double & x,
+        double & y,
         double & theta);
+
+    void sample_regularly(
+        double & x,
+        double & y,
+        double & theta,
+        unsigned int spatial_steps,
+        unsigned int angular_steps);
 
     unsigned int size() {
       return 2 * std::max(height, width);
@@ -41,6 +48,13 @@ class GridLine {
     unsigned int height, width;
     std::mt19937 gen;
     std::uniform_real_distribution<double> dist;
+    unsigned int spatial_step = 0;
+
+    void sample_perimeter(
+        double & x,
+        double & y,
+        double theta,
+        double perimeter);
 };
 
 }

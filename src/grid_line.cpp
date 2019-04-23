@@ -73,20 +73,51 @@ void wandering_robot::GridLine::sample(
     double & y,
     double & theta) {
 
-  // Only do the first quadrant for now
+  // Randomly sample a theta and a value
+  // along the perimeter indexed by [0,1]
   theta = (2 * M_PI) * dist(gen);
+  sample_perimeter(x, y, theta, dist(gen));
+}
+
+void wandering_robot::GridLine::sample_regularly(
+    double & x,
+    double & y,
+    double & theta,
+    unsigned int spatial_steps,
+    unsigned int angular_steps) {
+
+  if (spatial_step >= spatial_steps) {
+    // Reset the perimeter
+    spatial_step = 0;
+
+    // Increment theta
+    theta += 1./angular_steps;
+  }
+
+  // Increment and sample
+  sample_perimeter(x, y, theta,
+      (spatial_step++)/((double) spatial_steps));
+}
+
+void wandering_robot::GridLine::sample_perimeter(
+    double & x,
+    double & y,
+    double theta,
+    double perimeter) {
+
   double s = std::sin(theta);
   double c = std::cos(theta);
   double s_abs = std::abs(s);
   double c_abs = std::abs(c);
 
+  // Compute the normalized 
   double normalized_width = s_abs * width;
   double normalized_height = c_abs * height;
 
-  double choice = (normalized_width + normalized_height) * dist(gen);
-  if (choice < normalized_width) {
-    // Vertical
-    x = choice/s_abs;
+  perimeter *= (normalized_width + normalized_height);
+
+  if (perimeter < normalized_width) {
+    x = perimeter/s_abs;
     if (s < 0) {
       // Facing down
       y = height - 0.0000001;
@@ -95,7 +126,7 @@ void wandering_robot::GridLine::sample(
     }
   } else {
     // Horizontal
-    y = (choice - normalized_width)/c_abs;
+    y = (perimeter - normalized_width)/c_abs;
     if (c < 0) {
       // Facing left
       x = width - 0.0000001;
