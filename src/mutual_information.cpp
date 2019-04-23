@@ -47,7 +47,7 @@ void wandering_robot::MutualInformation::d1(
     unsigned int i = line[j];
 
     if (states[i] == OccupancyState::unknown) {
-      p_no_hit = std::exp(-poisson_rate * widths[i]);
+      p_no_hit = std::exp(-poisson_rate * widths[j]);
 
       // Multiply the contribution from the current cell,
       // (1 - e^(-lambda w)), with the probability that
@@ -123,12 +123,12 @@ void wandering_robot::MutualInformation::d2(
   for (int j = num_cells - 1; j >= 0; j--) {
     unsigned int i = line[j];
     if (states[i] == OccupancyState::unknown) {
-      p_no_hit = std::exp(-poisson_rate * widths[i]);
-      a = p_not_measured[i] * (1 - p_no_hit * (1 + poisson_rate * widths[i])) + p_no_hit * a;
-      b = p_no_hit * (b + widths[i] * c);
+      p_no_hit = std::exp(-poisson_rate * widths[j]);
+      a = p_not_measured[i] * (1 - p_no_hit * (1 + poisson_rate * widths[j])) + p_no_hit * a;
+      b = p_no_hit * (b + widths[j] * c);
       c = p_not_measured[i] * poisson_rate * (1 - p_no_hit) + p_no_hit * c;
     } else if (states[i] == OccupancyState::free) {
-      b += widths[i] * c;
+      b += widths[j] * c;
     } else {
       a = 0; b = 0; c = 0;
     }

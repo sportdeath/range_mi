@@ -26,7 +26,7 @@ int main() {
   wandering_robot::GridLine2D grid_line(height, width);
 
   // Initialize the line
-  unsigned int line_length = std::max(height, width);
+  unsigned int line_length = 2 * std::max(height, width);
   std::vector<unsigned int> line(line_length);
   std::vector<double> widths(line_length);
 
