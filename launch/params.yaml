@@ -3,8 +3,8 @@ p_not_measured_topic: "/p_not_measured"
 mi_max_topic: "/mi_max"
 map_topic: "/map"
 click_topic: "/clicked_point"
-poisson_rate: 0.1
-num_beams: 100000000
+poisson_rate: 0.01
+num_beams: 1000000
 beams_per_draw: 10000
 unknown_threshold: 0.1
 beam_independence: true

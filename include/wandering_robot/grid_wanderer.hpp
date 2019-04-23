@@ -12,10 +12,10 @@ class GridWanderer {
     GridWanderer() {}
 
     GridWanderer(
-        double poisson_ratio,
+        double poisson_rate,
         bool beam_independence_=true)
       : beam_independence(beam_independence_) {
-      mi_computer = wandering_robot::MutualInformation(poisson_ratio);
+      mi_computer = wandering_robot::MutualInformation(poisson_rate);
     }
 
     void set_map(
@@ -24,6 +24,11 @@ class GridWanderer {
         unsigned int width);
 
     void iterate_mi();
+    void condition(double x, double y, unsigned int theta_steps);
+
+    void reset_mi() {
+      std::fill(mi_.begin(), mi_.end(), 0);
+    }
 
     // Getters
     const std::vector<double> & mi() const {return mi_;};
@@ -48,6 +53,7 @@ class GridWanderer {
     unsigned int num_cells;
     std::vector<unsigned int> line;
     std::vector<double> widths;
+    std::vector<double> condition_distances;
 };
 
 }

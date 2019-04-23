@@ -137,3 +137,9 @@ void wandering_robot::MutualInformation::d2(
     mutual_information[i] += a + b;
     }
 }
+
+void wandering_robot::MutualInformation::condition(
+    double & p_not_measured,
+    double unknown_length) {
+  p_not_measured *= (1 - std::exp(-poisson_rate * unknown_length));
+}

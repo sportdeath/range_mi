@@ -60,6 +60,18 @@ class MutualInformation {
         unsigned int num_cells,
         double * const mutual_information);
 
+    /**
+     * Given a previous value for p_not_measured
+     * at some point in space, compute a new value
+     * for p_not_measured at that point, given that
+     * a measurement has been made in that direction,
+     * passing through an unknown region of length
+     * unknown_length.
+     */
+    void condition(
+        double & p_not_measured,
+        double unknown_length);
+
   private:
 
     /**

@@ -65,8 +65,27 @@ class MutualInformationVisualizer {
       // Initialize the map for computation
       w.set_map(states, map_info.height, map_info.width);
 
-      // Compute the MI, drawing the map regularly
+      compute_mi();
+    }
+
+    void click_callback(const geometry_msgs::PointStamped & click_msg) {
+      // Condition the map on the clicked point
+
+      double x = click_msg.point.x/map_info.resolution;
+      double y = click_msg.point.y/map_info.resolution;
+
+      std::cout << "Conditioning on " << x << ", " << y << std::endl;
+      w.condition(x, y, 100000);
+
+      // Recompute the mi
+      compute_mi();
+    }
+
+    void compute_mi() {
+      w.reset_mi();
+
       for (int i = 0; i < num_beams; i++) {
+        // Draw the map regularly
         if (i % beams_per_draw == 0) {
           draw_map();
           if (not ros::ok()) break;
@@ -76,9 +95,6 @@ class MutualInformationVisualizer {
       draw_map();
     }
 
-    void click_callback(const geometry_msgs::PointStamped & click_msg) {
-      std::cout << "Click!" << std::endl;
-    }
 
     void draw_map() {
       // Construct a message for the mutual information surface
