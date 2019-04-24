@@ -72,49 +72,32 @@ void wandering_robot::GridLine::sample(
     double & x,
     double & y,
     double & theta) {
-
-  // Randomly sample a theta and a value
-  // along the perimeter indexed by [0,1]
-  theta = (2 * M_PI) * dist(gen);
-  sample_perimeter(x, y, theta, dist(gen));
+  sample_regularly(x, y, theta, dist(gen), dist(gen));
 }
 
 void wandering_robot::GridLine::sample_regularly(
     double & x,
     double & y,
     double & theta,
-    unsigned int spatial_steps,
-    unsigned int angular_steps) {
+    double spatial_interpolation,
+    double angular_interpolation) {
 
-  if (spatial_step >= spatial_steps) {
-    // Reset the perimeter
-    spatial_step = 0;
+  // Calculate theta
+  theta = 2 * M_PI * angular_interpolation;
 
-    // Increment theta
-    theta += 1./angular_steps;
-  }
-
-  // Increment and sample
-  sample_perimeter(x, y, theta,
-      (spatial_step++)/((double) spatial_steps));
-}
-
-void wandering_robot::GridLine::sample_perimeter(
-    double & x,
-    double & y,
-    double theta,
-    double perimeter) {
-
+  // Pre-compute trig values
   double s = std::sin(theta);
   double c = std::cos(theta);
   double s_abs = std::abs(s);
   double c_abs = std::abs(c);
 
-  // Compute the normalized 
+  // Compute the normalized spatial dimensions
   double normalized_width = s_abs * width;
   double normalized_height = c_abs * height;
 
-  perimeter *= (normalized_width + normalized_height);
+  double perimeter =
+    (normalized_width + normalized_height) *
+    spatial_interpolation;
 
   if (perimeter < normalized_width) {
     x = perimeter/s_abs;

@@ -23,8 +23,8 @@ class MutualInformationVisualizer {
       n.getParam("mi_max_topic", mi_max_topic);
       n.getParam("map_topic", map_topic);
       n.getParam("click_topic", click_topic);
-      n.getParam("num_beams", num_beams);
-      n.getParam("beams_per_draw", beams_per_draw);
+      n.getParam("mi_angular_steps", mi_angular_steps);
+      n.getParam("mi_spatial_steps", mi_spatial_steps);
       n.getParam("unknown_threshold", unknown_threshold);
       n.getParam("poisson_rate", poisson_rate);
       n.getParam("beam_independence", beam_independence);
@@ -84,17 +84,15 @@ class MutualInformationVisualizer {
     void compute_mi() {
       w.reset_mi();
 
-      for (int i = 0; i < num_beams; i++) {
-        // Draw the map regularly
-        if (i % beams_per_draw == 0) {
-          draw_map();
-          if (not ros::ok()) break;
+      for (int i = 0; i < mi_angular_steps; i++) {
+        for (int j = 0; j < mi_spatial_steps; j++) {
+          w.accrue_mi(j/((double)spatial_steps), i/((double)angular_steps));
         }
-        w.iterate_mi();
+        draw_map();
+        if (not ros::ok()) break;
       }
       draw_map();
     }
-
 
     void draw_map() {
       // Construct a message for the mutual information surface
@@ -139,7 +137,7 @@ class MutualInformationVisualizer {
 
     // Parameters
     double unknown_threshold;
-    int num_beams, beams_per_draw;
+    int mi_spatial_steps, mi_angular_steps;
 
     // Map data
     nav_msgs::MapMetaData map_info;

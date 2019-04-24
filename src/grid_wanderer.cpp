@@ -25,9 +25,14 @@ void wandering_robot::GridWanderer::set_map(
   condition_distances = std::vector<double>(height * width);
 }
 
-void wandering_robot::GridWanderer::iterate_mi() {
+void wandering_robot::GridWanderer::accrue_mi(
+    double spatial_interpolation,
+    double angular_interpolation) {
+
   // Randomly sample a point
-  grid_line.sample(x, y, theta);
+  grid_line.sample_regularly(x, y, theta,
+      spatial_interpolation,
+      angular_interpolation);
 
   // Compute the intersections of
   // the line with the grid

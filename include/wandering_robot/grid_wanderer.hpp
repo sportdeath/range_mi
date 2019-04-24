@@ -23,14 +23,11 @@ class GridWanderer {
         unsigned int height,
         unsigned int width);
 
-    void iterate_mi();
-    void condition(double x, double y, unsigned int theta_steps);
+    void reset_mi() {std::fill(mi_.begin(), mi_.end(), 0);}
+    void accrue_mi(double spatial_interpolation, double angular_interpolation);
 
-    void reset_mi() {
-      std::fill(mi_.begin(), mi_.end(), 0);
-    }
+    void condition(double x, double y, unsigned int angular_steps);
 
-    // Getters
     const std::vector<double> & mi() const {return mi_;};
     const std::vector<double> & p_not_measured() const {return p_not_measured_;};
 
