@@ -24,6 +24,7 @@ MutualInformationVisualizer() {
       n.getParam("map_incomplete_topic", states_topic);
       n.getParam("trajectory_topic", trajectory_topic);
       n.getParam("click_topic", click_topic);
+      n.getParam("num_mi_points", num_mi_points);
       n.getParam("mi_angular_steps", mi_angular_steps);
       n.getParam("mi_spatial_steps", mi_spatial_steps);
       n.getParam("condition_steps", condition_steps);
@@ -76,7 +77,6 @@ MutualInformationVisualizer() {
 
     void click_callback(const geometry_msgs::PointStamped & click_msg) {
       unsigned int num_beams = 1000;
-      unsigned int num_points = 5;
       double x = click_msg.point.x;
       double y = click_msg.point.y;
 
@@ -97,7 +97,7 @@ MutualInformationVisualizer() {
         // Find the closest point with lots of information
         double closest_dist = map_info.height * map_info.width;
         double closest_x, closest_y;
-        for (unsigned int i = 0; i < num_points and ros::ok(); i++) {
+        for (unsigned int i = 0; i < num_mi_points and ros::ok(); i++) {
           // Compute the mutual information
           compute_mi();
 
@@ -199,7 +199,7 @@ MutualInformationVisualizer() {
       trajectory_msg.type = visualization_msgs::Marker::LINE_STRIP;
       trajectory_msg.action = visualization_msgs::Marker::ADD;
       trajectory_msg.pose.orientation.w = 1;
-      trajectory_msg.scale.x = 3;
+      trajectory_msg.scale.x = 1;
       trajectory_msg.color.a = 1;
       trajectory_msg.color.b = 1;
       trajectory_pub.publish(trajectory_msg);
@@ -216,6 +216,7 @@ MutualInformationVisualizer() {
     bool beam_independence;
     int mi_spatial_steps, mi_angular_steps;
     int condition_steps;
+    int num_mi_points;
 
     // Map data
     nav_msgs::MapMetaData map_info;
