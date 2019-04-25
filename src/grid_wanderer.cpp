@@ -2,13 +2,17 @@
 #include "wandering_robot/grid_line.hpp"
 #include "wandering_robot/grid_wanderer.hpp"
 
-void wandering_robot::GridWanderer::set_map(
-    const std::vector<wandering_robot::OccupancyState> & states_,
+wandering_robot::GridWanderer::GridWanderer(
     unsigned int height,
-    unsigned int width) {
+    unsigned int width,
+    double poisson_rate,
+    bool beam_independence_)
+  : beam_independence(beam_independence_) {
 
   // Store the map states
-  states = states_;
+  states_ = std::vector<wandering_robot::OccupancyState>(
+      height * width,
+      wandering_robot::OccupancyState::unknown);
 
   // Set the MI to zero
   mi_ = std::vector<double>(height * width, 0);
@@ -23,6 +27,8 @@ void wandering_robot::GridWanderer::set_map(
   line = std::vector<unsigned int>(grid_line.size());
   widths = std::vector<double>(grid_line.size());
   condition_distances = std::vector<double>(height * width);
+
+  mi_computer = wandering_robot::MutualInformation(poisson_rate);
 }
 
 void wandering_robot::GridWanderer::accrue_mi(
@@ -45,7 +51,7 @@ void wandering_robot::GridWanderer::accrue_mi(
   // Make vectors of the states, etc.
   if (beam_independence) {
     mi_computer.d2(
-        states.data(),
+        states_.data(),
         widths.data(),
         p_not_measured_.data(),
         line.data(),
@@ -53,7 +59,7 @@ void wandering_robot::GridWanderer::accrue_mi(
         mi_.data());
   } else {
     mi_computer.d1(
-        states.data(),
+        states_.data(),
         widths.data(),
         p_not_measured_.data(),
         line.data(),
@@ -86,7 +92,7 @@ void wandering_robot::GridWanderer::condition(double x, double y, unsigned int t
     for (unsigned int j = 0; j < num_cells; j++) {
       condition_distances[line[j]] += widths[j] * total_length * unknown_length * theta_step;
       total_length += widths[j];
-      if (states[line[j]] == OccupancyState::unknown)
+      if (states_[line[j]] == OccupancyState::unknown)
         unknown_length += widths[j];
     }
 
@@ -97,4 +103,65 @@ void wandering_robot::GridWanderer::condition(double x, double y, unsigned int t
   for (unsigned int i = 0; i < p_not_measured_.size(); i++) {
     mi_computer.condition(p_not_measured_[i], condition_distances[i]);
   }
+}
+
+void wandering_robot::GridWanderer::apply_scan(
+    double x, double y, const std::vector<double> & scan) {
+  double theta = -M_PI;
+
+  for (size_t i = 0; i < scan.size(); i++) {
+    // Draw a line in the direction of each scan
+    grid_line.draw(
+        x, y, theta,
+        line.data(),
+        widths.data(),
+        num_cells);
+
+    // Iterate over the line
+    double length = 0;
+    for (unsigned int j = 0; j < num_cells; j++) {
+      // If we've reached the end of the beam mark occupied
+      if (length >= scan[i]) {
+        states_[line[j]] = wandering_robot::OccupancyState::occupied;
+        break;
+      }
+
+      // Otherwise mark free
+      states_[line[j]] = wandering_robot::OccupancyState::free;
+
+      // Accumulate the length
+      length += widths[j];
+    }
+
+    theta += 2 * M_PI/scan.size();
+  }
+}
+
+std::vector<double> wandering_robot::GridWanderer::make_scan(
+    double x, double y,
+    unsigned int num_beams) {
+
+  std::vector<double> scan(num_beams);
+  double theta = -M_PI;
+  for (unsigned int i = 0; i < num_beams; i++) {
+    // Draw a line in the direction of each scan
+    grid_line.draw(
+        x, y, theta,
+        line.data(),
+        widths.data(),
+        num_cells);
+
+    double length = 0;
+    for (unsigned int j = 0; j < num_cells; j++) {
+      if (map[line[j]] == wandering_robot::OccupancyState::occupied)
+        break;
+
+      length += widths[j];
+    }
+
+    scan[i] = length;
+    theta += (2 * M_PI)/num_beams;
+  }
+
+  return scan;
 }

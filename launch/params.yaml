@@ -2,6 +2,9 @@ mi_topic: "/mi"
 p_not_measured_topic: "/p_not_measured"
 mi_points_topic: "/mi_points"
 map_topic: "/map"
+click_topic: "/clicked_point"
+map_incomplete_topic: "/map_incomplete"
+trajectory_topic: "/trajectory"
 
 poisson_rate: 0.1
 mi_angular_steps: 200
