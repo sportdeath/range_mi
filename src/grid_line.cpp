@@ -68,6 +68,19 @@ void wandering_robot::GridLine::draw(
   }
 }
 
+void wandering_robot::GridLine::draw(
+    unsigned int cell,
+    double theta,
+    unsigned int * const line,
+    double * const widths,
+    unsigned int & num_cells) {
+  // Convert to x, y and jitter around cell
+  unsigned int y = cell/width;
+  unsigned int x = cell - y * width;
+  //draw(x + dist(gen), y + dist(gen), theta, line, widths, num_cells);
+  draw(x, y, theta, line, widths, num_cells);
+}
+
 void wandering_robot::GridLine::sample(
     double & x,
     double & y,

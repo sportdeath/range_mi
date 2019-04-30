@@ -21,14 +21,16 @@ class GridWanderer {
       map = map_;
     }
 
-    void apply_scan(double x, double y, const std::vector<double> & scan);
-    std::vector<double> make_scan(double x, double y, unsigned int num_beams);
+    void apply_scan(unsigned int cell, const std::vector<double> & scan);
+    std::vector<double> make_scan(unsigned int cell, unsigned int num_beams);
 
     void reset_mi() {std::fill(mi_.begin(), mi_.end(), 0);}
     void accrue_mi(double spatial_interpolation, double angular_interpolation);
 
-    void condition(double x, double y, unsigned int angular_steps);
+    void condition(unsigned int cell, unsigned int angular_steps);
     void reset_p_not_measured() {std::fill(p_not_measured_.begin(), p_not_measured_.end(), 1);}
+
+    void dijkstra(unsigned int start, std::vector<double> & distances, std::vector<unsigned int> & parents);
 
     const std::vector<double> & mi() const {return mi_;}
     const std::vector<double> & p_not_measured() const {return p_not_measured_;}

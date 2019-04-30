@@ -77,32 +77,49 @@ MutualInformationVisualizer() {
 
     void click_callback(const geometry_msgs::PointStamped & click_msg) {
       unsigned int num_beams = 1000;
-      double x = click_msg.point.x;
-      double y = click_msg.point.y;
+
+      // Convert to map cell
+      std::vector<unsigned int> path =
+          {((int) click_msg.point.y) * map_info.width + ((int) click_msg.point.x)};
+
+      double total_distance = 0;
 
       while (ros::ok()) {
-        geometry_msgs::Point point;
-        point.x = x;
-        point.y = y;
-        trajectory_msg.points.push_back(point);
+        // For each point along the path make a scan
+        for (unsigned int cell : path) {
+          std::vector<double> scan = w.make_scan(cell, num_beams);
+          w.apply_scan(cell, scan);
+          
+          // Update the trajectory and draw
+          geometry_msgs::Point point;
+          point.y = (int) cell/map_info.width;
+          point.x = cell - point.y * map_info.width;
+          trajectory_msg.points.push_back(point);
+          draw_map();
+          ros::Duration(0.002).sleep();
+        }
 
-        // Make and apply a scan
-        std::vector<double> scan = w.make_scan(x, y, num_beams);
-        w.apply_scan(x, y, scan);
+        
+        std::cout << "total distance traveled: " << total_distance << std::endl;
 
-        // Clear
+        // Clear the conditioning
         w.reset_p_not_measured();
-        mi_points_msg.points.clear();
 
-        // Find the closest point with lots of information
-        double closest_dist = map_info.height * map_info.width;
-        double closest_x, closest_y;
-        for (unsigned int i = 0; i < num_mi_points and ros::ok(); i++) {
+        // Compute Dijkstra
+        std::vector<double> distances;
+        std::vector<unsigned int> parents;
+        unsigned int start = path.back();
+        w.dijkstra(start, distances, parents);
+
+        // Find shortest path to a point with lots of information
+        double best_distance = map_info.height * map_info.width;
+        unsigned int best_cell;
+        for (int i = 0; i < num_mi_points and ros::ok(); i++) {
           // Compute the mutual information
           compute_mi();
 
           // Find free space with maximum mutual information
-          int mi_max_cell = 0;
+          unsigned int mi_max_cell = 0;
           double mi_max = 0;
           for (unsigned int j = 0; j < w.mi().size(); j++) {
             if (w.states()[j] == wandering_robot::OccupancyState::free) {
@@ -112,31 +129,28 @@ MutualInformationVisualizer() {
               }
             }
           }
-          std::cout << "max mi " << mi_max << "@" << mi_max_cell << std::endl;
-          int y_ = mi_max_cell/map_info.width;
-          int x_ = mi_max_cell - y_ * map_info.width;
 
-          // If the point is closer than the current location update
-          double dist = std::sqrt((x - x_) * (x - x_) + (y - y_) * (y - y_));
-          if (dist < closest_dist) {
-            closest_dist = dist;
-            closest_x = x_;
-            closest_y = y_;
+          // See if it is closer than the last
+          if (distances[mi_max_cell] < best_distance) {
+            best_distance = distances[mi_max_cell];
+            best_cell = mi_max_cell;
           }
 
-          // Add the point to list of points for visualization
-          geometry_msgs::Point32 point;
-          point.x = x_;
-          point.y = y_;
-          mi_points_msg.points.push_back(point);
-
           // Condition on the maximum point
-          w.condition(x_, y_, condition_steps);
+          w.condition(mi_max_cell, condition_steps);
+
+          std::cout << "max mi: " << mi_max << "@" << mi_max_cell << std::endl;
+          std::cout << "distance: " << distances[mi_max_cell] << std::endl;
         }
 
-        // Update the best point
-        x = closest_x;
-        y = closest_y;
+        // Update the best path
+        path.clear();
+        while (best_cell != start) {
+          path.push_back(best_cell);
+          best_cell = parents[best_cell];
+        }
+        std::reverse(path.begin(), path.end());
+        total_distance += best_distance;
 
         draw_map();
       }

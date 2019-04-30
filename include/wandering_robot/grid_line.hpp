@@ -28,6 +28,13 @@ class GridLine {
         double * const widths,
         unsigned int & num_cells);
 
+    void draw(
+        unsigned int cell,
+        double theta,
+        unsigned int * const line,
+        double * const widths,
+        unsigned int & num_cells);
+
     void sample(
         double & x,
         double & y,
@@ -44,8 +51,9 @@ class GridLine {
       return 2 * std::max(height, width);
     }
 
-  private:
     unsigned int height, width;
+
+  private:
     std::mt19937 gen;
     std::uniform_real_distribution<double> dist;
 };

@@ -7,7 +7,7 @@ map_incomplete_topic: "/map_incomplete"
 trajectory_topic: "/trajectory"
 
 poisson_rate: 0.1
-num_mi_points: 1
+num_mi_points: 5
 mi_angular_steps: 100
 mi_spatial_steps: 500
 condition_steps: 10000

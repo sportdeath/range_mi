@@ -1,3 +1,6 @@
+#include <limits>
+#include <list>
+
 #include "wandering_robot/mutual_information.hpp"
 #include "wandering_robot/grid_line.hpp"
 #include "wandering_robot/grid_wanderer.hpp"
@@ -68,7 +71,7 @@ void wandering_robot::GridWanderer::accrue_mi(
   }
 }
 
-void wandering_robot::GridWanderer::condition(double x, double y, unsigned int theta_steps) {
+void wandering_robot::GridWanderer::condition(unsigned int cell, unsigned int angular_steps) {
   // Empty the condition distances
   // These values will represent the distance 
   // through unknown space that a beam, originating
@@ -76,13 +79,13 @@ void wandering_robot::GridWanderer::condition(double x, double y, unsigned int t
   std::fill(condition_distances.begin(), condition_distances.end(), 0);
 
   double theta = 0;
-  double theta_step = (2 * M_PI)/theta_steps;
+  double theta_step = (2 * M_PI)/angular_steps;
 
-  for (unsigned int i = 0; i < theta_steps; i++) {
+  for (unsigned int i = 0; i < angular_steps; i++) {
     // Compute the intersections of
     // the line with the grid
     grid_line.draw(
-        x, y, theta,
+        cell, theta,
         line.data(),
         widths.data(),
         num_cells);
@@ -106,13 +109,14 @@ void wandering_robot::GridWanderer::condition(double x, double y, unsigned int t
 }
 
 void wandering_robot::GridWanderer::apply_scan(
-    double x, double y, const std::vector<double> & scan) {
+    unsigned int cell, const std::vector<double> & scan) {
+
   double theta = -M_PI;
 
   for (size_t i = 0; i < scan.size(); i++) {
     // Draw a line in the direction of each scan
     grid_line.draw(
-        x, y, theta,
+        cell, theta,
         line.data(),
         widths.data(),
         num_cells);
@@ -138,7 +142,7 @@ void wandering_robot::GridWanderer::apply_scan(
 }
 
 std::vector<double> wandering_robot::GridWanderer::make_scan(
-    double x, double y,
+    unsigned int cell,
     unsigned int num_beams) {
 
   std::vector<double> scan(num_beams);
@@ -146,7 +150,7 @@ std::vector<double> wandering_robot::GridWanderer::make_scan(
   for (unsigned int i = 0; i < num_beams; i++) {
     // Draw a line in the direction of each scan
     grid_line.draw(
-        x, y, theta,
+        cell, theta,
         line.data(),
         widths.data(),
         num_cells);
@@ -164,4 +168,73 @@ std::vector<double> wandering_robot::GridWanderer::make_scan(
   }
 
   return scan;
+}
+
+void wandering_robot::GridWanderer::dijkstra(
+    unsigned int start, 
+    std::vector<double> & distances,
+    std::vector<unsigned int> & parents) {
+
+  // Create arrays of distances and parents
+  distances = std::vector<double>(map.size(), std::numeric_limits<double>::max());
+  parents = std::vector<unsigned int>(map.size());
+
+  // Initialize the nodes and set the distance to zero
+  std::vector<bool> closed_set(map.size(), false);
+  std::list<unsigned int> open_set = {start};
+  distances[start] = 0;
+
+  // Initialize a comparator and make the heap
+  auto cmp = [distances](unsigned int left, unsigned int right) {
+    return distances[left] < distances[right];
+  };
+
+  while (not open_set.empty()) {
+    // Find the element with the lowest value
+    auto current_index = std::min_element(open_set.begin(), open_set.end(), cmp);
+    unsigned int current = *current_index;
+
+    // Remove the node and don't visit it again
+    open_set.erase(current_index);
+    if (closed_set[current]) continue;
+    closed_set[current] = true;
+
+    // Convert current to x, y
+    int y = current/grid_line.width;
+    int x = current - y * grid_line.width;
+
+    // Iterate around neighbors
+    for (int x_ = x - 1; x_ <= x + 1; x_++) {
+      for (int y_ = y - 1; y_ <= y + 1; y_++) {
+        // Check if out of bounds
+        if (x_ < 0 or y_ < 0 or
+            x_ >= (int) grid_line.width or
+            y_ >= (int) grid_line.height)
+          continue;
+
+        // Convert back to cell
+        unsigned int neighbor = y_ * grid_line.width + x_;
+
+        // Ignore, it's already been visited
+        if (closed_set[neighbor]) continue;
+
+        // Ignore if the cell is not free
+        if (map[neighbor] != OccupancyState::free) continue;
+
+        // Update the new distance
+        double new_distance = distances[current] +
+          std::sqrt(std::abs(x - x_) + std::abs(y - y_));
+
+        // If this new distance is better than before
+        if (new_distance < distances[neighbor]) {
+          // Update it and the parent
+          distances[neighbor] = new_distance;
+          parents[neighbor] = current;
+
+          // Add it to the open set
+          open_set.push_back(neighbor);
+        }
+      }
+    }
+  }
 }
