@@ -1,5 +1,5 @@
 #include <limits>
-#include <list>
+#include <algorithm>
 
 #include "wandering_robot/mutual_information.hpp"
 #include "wandering_robot/grid_line.hpp"
@@ -181,21 +181,23 @@ void wandering_robot::GridWanderer::dijkstra(
 
   // Initialize the nodes and set the distance to zero
   std::vector<bool> closed_set(map.size(), false);
-  std::list<unsigned int> open_set = {start};
+  std::vector<unsigned int> open_set = {start};
   distances[start] = 0;
 
   // Initialize a comparator and make the heap
-  auto cmp = [distances](unsigned int left, unsigned int right) {
-    return distances[left] < distances[right];
+  auto cmp = [&distances](unsigned int left, unsigned int right) mutable {
+    return distances[left] > distances[right];
   };
 
   while (not open_set.empty()) {
-    // Find the element with the lowest value
-    auto current_index = std::min_element(open_set.begin(), open_set.end(), cmp);
-    unsigned int current = *current_index;
+    // Remake into a heap
+    std::make_heap(open_set.begin(), open_set.end(), cmp);
 
+    // Find the element with the lowest value.
     // Remove the node and don't visit it again
-    open_set.erase(current_index);
+    unsigned int current = open_set.front();
+    std::pop_heap(open_set.begin(), open_set.end(), cmp);
+    open_set.pop_back();
     if (closed_set[current]) continue;
     closed_set[current] = true;
 
