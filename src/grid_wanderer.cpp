@@ -108,40 +108,7 @@ void wandering_robot::GridWanderer::condition(unsigned int cell, unsigned int an
   }
 }
 
-void wandering_robot::GridWanderer::apply_scan(
-    unsigned int cell, const std::vector<double> & scan) {
-
-  double theta = -M_PI;
-
-  for (size_t i = 0; i < scan.size(); i++) {
-    // Draw a line in the direction of each scan
-    grid_line.draw(
-        cell, theta,
-        line.data(),
-        widths.data(),
-        num_cells);
-
-    // Iterate over the line
-    double length = 0;
-    for (unsigned int j = 0; j < num_cells; j++) {
-      // If we've reached the end of the beam mark occupied
-      if (length >= scan[i]) {
-        states_[line[j]] = wandering_robot::OccupancyState::occupied;
-        break;
-      }
-
-      // Otherwise mark free
-      states_[line[j]] = wandering_robot::OccupancyState::free;
-
-      // Accumulate the length
-      length += widths[j];
-    }
-
-    theta += 2 * M_PI/scan.size();
-  }
-}
-
-std::vector<double> wandering_robot::GridWanderer::make_scan(
+void wandering_robot::GridWanderer::make_scan(
     unsigned int cell,
     unsigned int num_beams) {
 
@@ -155,19 +122,19 @@ std::vector<double> wandering_robot::GridWanderer::make_scan(
         widths.data(),
         num_cells);
 
-    double length = 0;
     for (unsigned int j = 0; j < num_cells; j++) {
-      if (map[line[j]] == wandering_robot::OccupancyState::occupied)
+      // If we hit an occupied cell, stop
+      if (map[line[j]] != wandering_robot::OccupancyState::free) {
+        states_[line[j]] = wandering_robot::OccupancyState::occupied;
         break;
+      }
 
-      length += widths[j];
+      // Otherwise mark free
+      states_[line[j]] = wandering_robot::OccupancyState::free;
     }
 
-    scan[i] = length;
     theta += (2 * M_PI)/num_beams;
   }
-
-  return scan;
 }
 
 void wandering_robot::GridWanderer::dijkstra(

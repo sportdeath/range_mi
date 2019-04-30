@@ -21,8 +21,8 @@ class GridWanderer {
       map = map_;
     }
 
-    void apply_scan(unsigned int cell, const std::vector<double> & scan);
-    std::vector<double> make_scan(unsigned int cell, unsigned int num_beams);
+    void make_scan(unsigned int cell, unsigned int num_beams);
+    void reset_states() {std::fill(states_.begin(), states_.end(), wandering_robot::OccupancyState::unknown);}
 
     void reset_mi() {std::fill(mi_.begin(), mi_.end(), 0);}
     void accrue_mi(double spatial_interpolation, double angular_interpolation);

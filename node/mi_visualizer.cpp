@@ -16,12 +16,13 @@ MutualInformationVisualizer() {
 
       // Fetch the ROS parameters
       std::string mi_topic, p_not_measured_topic, mi_points_topic, states_topic;
-      std::string map_topic, click_topic, trajectory_topic;
+      std::string map_topic, click_topic, trajectory_topic, dijkstra_topic;
       n.getParam("mi_topic", mi_topic);
       n.getParam("p_not_measured_topic", p_not_measured_topic);
       n.getParam("mi_points_topic", mi_points_topic);
       n.getParam("map_topic", map_topic);
       n.getParam("map_incomplete_topic", states_topic);
+      n.getParam("dijkstra_topic", dijkstra_topic);
       n.getParam("trajectory_topic", trajectory_topic);
       n.getParam("click_topic", click_topic);
       n.getParam("num_mi_points", num_mi_points);
@@ -36,6 +37,7 @@ MutualInformationVisualizer() {
       mi_pub = n.advertise<nav_msgs::OccupancyGrid>(mi_topic, 1, true);
       p_not_measured_pub = n.advertise<nav_msgs::OccupancyGrid>(p_not_measured_topic, 1, true);
       states_pub = n.advertise<nav_msgs::OccupancyGrid>(states_topic, 1, true);
+      dijkstra_pub = n.advertise<nav_msgs::OccupancyGrid>(dijkstra_topic, 1, true);
       mi_points_pub = n.advertise<sensor_msgs::PointCloud>(mi_points_topic, 1, true);
       trajectory_pub = n.advertise<visualization_msgs::Marker>(trajectory_topic, 1, true);
 
@@ -84,11 +86,14 @@ MutualInformationVisualizer() {
 
       double total_distance = 0;
 
+      // Reset the map and trajectory
+      w.reset_states();
+      trajectory_msg.points.clear();
+
       while (ros::ok()) {
         // For each point along the path make a scan
         for (unsigned int cell : path) {
-          std::vector<double> scan = w.make_scan(cell, num_beams);
-          w.apply_scan(cell, scan);
+          w.make_scan(cell, num_beams);
           
           // Update the trajectory and draw
           geometry_msgs::Point point;
@@ -99,21 +104,22 @@ MutualInformationVisualizer() {
           ros::Duration(0.002).sleep();
         }
 
-        
         std::cout << "total distance traveled: " << total_distance << std::endl;
 
         // Clear the conditioning
         w.reset_p_not_measured();
 
+        // Clear visualization
+        mi_points_msg.points.clear();
+
         // Compute Dijkstra
-        std::vector<double> distances;
         std::vector<unsigned int> parents;
         unsigned int start = path.back();
-        w.dijkstra(start, distances, parents);
+        w.dijkstra(start, dijkstra_distances, parents);
 
         // Find shortest path to a point with lots of information
         double best_distance = map_info.height * map_info.width;
-        unsigned int best_cell;
+        unsigned int best_cell = map_info.height * map_info.width;
         for (int i = 0; i < num_mi_points and ros::ok(); i++) {
           // Compute the mutual information
           compute_mi();
@@ -130,18 +136,30 @@ MutualInformationVisualizer() {
             }
           }
 
+          // Mutual information has reached zero... nothing more can be done
+          if (mi_max == 0) break;
+
           // See if it is closer than the last
-          if (distances[mi_max_cell] < best_distance) {
-            best_distance = distances[mi_max_cell];
+          if (dijkstra_distances[mi_max_cell] < best_distance) {
+            best_distance = dijkstra_distances[mi_max_cell];
             best_cell = mi_max_cell;
           }
 
           // Condition on the maximum point
           w.condition(mi_max_cell, condition_steps);
 
-          std::cout << "max mi: " << mi_max << "@" << mi_max_cell << std::endl;
-          std::cout << "distance: " << distances[mi_max_cell] << std::endl;
+          //std::cout << "max mi: " << mi_max << "@" << mi_max_cell << std::endl;
+          //std::cout << "distance: " << dijkstra_distances[mi_max_cell] << std::endl;
+
+          // Add the point
+          geometry_msgs::Point32 point;
+          point.y = (int) mi_max_cell/map_info.width;
+          point.x = mi_max_cell - point.y * map_info.width;
+          mi_points_msg.points.push_back(point);
         }
+
+        // If true, the MI was never update which means it is zero everywhere
+        if (best_cell >= map_info.height * map_info.width) break;
 
         // Update the best path
         path.clear();
@@ -204,6 +222,16 @@ MutualInformationVisualizer() {
       }
       states_pub.publish(states_msg);
 
+      // Do the same for Dijkstra
+      if (dijkstra_distances.size() > 0) {
+        nav_msgs::OccupancyGrid dijkstra_msg = mi_msg;
+        double max_dijkstra_distance = *std::max_element(dijkstra_distances.begin(), dijkstra_distances.end());
+        max_dijkstra_distance = 1000;
+        for (size_t i = 0; i < dijkstra_distances.size(); i++)
+          dijkstra_msg.data[i] = 100 * (1 - (dijkstra_distances[i]/max_dijkstra_distance));
+        dijkstra_pub.publish(dijkstra_msg);
+      }
+
       // Plot the position of the maximum mutual information
       mi_points_msg.header = mi_msg.header;
       mi_points_pub.publish(mi_points_msg);
@@ -223,7 +251,7 @@ MutualInformationVisualizer() {
     ros::NodeHandle n;
     ros::Subscriber map_sub, click_sub;
     ros::Publisher mi_pub, p_not_measured_pub, states_pub;
-    ros::Publisher mi_points_pub, trajectory_pub;
+    ros::Publisher mi_points_pub, trajectory_pub, dijkstra_pub;
 
     // Parameters
     double poisson_rate, unknown_threshold;
@@ -239,6 +267,9 @@ MutualInformationVisualizer() {
     // Accumulated points
     sensor_msgs::PointCloud mi_points_msg;
     visualization_msgs::Marker trajectory_msg;
+
+    // Distance map
+    std::vector<double> dijkstra_distances;
 
     // Computation devices
     wandering_robot::GridWanderer w;
