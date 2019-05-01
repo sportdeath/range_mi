@@ -3,6 +3,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/PointStamped.h>
 #include <sensor_msgs/PointCloud.h>
+#include <std_msgs/Int64.h>
 #include <visualization_msgs/Marker.h>
 
 #include "wandering_robot/grid_wanderer.hpp"
@@ -16,7 +17,7 @@ MutualInformationVisualizer() {
 
       // Fetch the ROS parameters
       std::string mi_topic, p_not_measured_topic, mi_points_topic, states_topic;
-      std::string map_topic, click_topic, trajectory_topic, dijkstra_topic;
+      std::string map_topic, click_topic, trajectory_topic, dijkstra_topic, num_unknown_topic;
       n.getParam("mi_topic", mi_topic);
       n.getParam("p_not_measured_topic", p_not_measured_topic);
       n.getParam("mi_points_topic", mi_points_topic);
@@ -25,6 +26,7 @@ MutualInformationVisualizer() {
       n.getParam("dijkstra_topic", dijkstra_topic);
       n.getParam("trajectory_topic", trajectory_topic);
       n.getParam("click_topic", click_topic);
+      n.getParam("num_unknown_topic", num_unknown_topic);
       n.getParam("num_mi_points", num_mi_points);
       n.getParam("mi_angular_steps", mi_angular_steps);
       n.getParam("mi_spatial_steps", mi_spatial_steps);
@@ -40,6 +42,7 @@ MutualInformationVisualizer() {
       dijkstra_pub = n.advertise<nav_msgs::OccupancyGrid>(dijkstra_topic, 1, true);
       mi_points_pub = n.advertise<sensor_msgs::PointCloud>(mi_points_topic, 1, true);
       trajectory_pub = n.advertise<visualization_msgs::Marker>(trajectory_topic, 1, true);
+      num_unknown_pub = n.advertise<std_msgs::Int64>(num_unknown_topic, 1);
 
       // Subscribe to maps and clicked points
       map_sub = n.subscribe(map_topic, 1, &MutualInformationVisualizer::map_callback, this);
@@ -211,9 +214,12 @@ MutualInformationVisualizer() {
 
       // Do the same for the states
       nav_msgs::OccupancyGrid states_msg = mi_msg;
-      for (size_t i = 0; i < states_msg.data.size(); i++) {
+      std_msgs::Int64 num_unknown_msg;
+      num_unknown_msg.data = 0;
+      for (size_t i = 0; i < w.states().size(); i++) {
         if (w.states()[i] == wandering_robot::OccupancyState::unknown) {
           states_msg.data[i] = 50;
+          num_unknown_msg.data++;
         } else if (w.states()[i] == wandering_robot::OccupancyState::free) {
           states_msg.data[i] = 0;
         } else {
@@ -221,6 +227,7 @@ MutualInformationVisualizer() {
         }
       }
       states_pub.publish(states_msg);
+      num_unknown_pub.publish(num_unknown_msg);
 
       // Do the same for Dijkstra
       if (dijkstra_distances.size() > 0) {
@@ -252,6 +259,7 @@ MutualInformationVisualizer() {
     ros::Subscriber map_sub, click_sub;
     ros::Publisher mi_pub, p_not_measured_pub, states_pub;
     ros::Publisher mi_points_pub, trajectory_pub, dijkstra_pub;
+    ros::Publisher num_unknown_pub;
 
     // Parameters
     double poisson_rate, unknown_threshold;

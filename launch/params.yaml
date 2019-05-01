@@ -6,9 +6,10 @@ click_topic: "/clicked_point"
 map_incomplete_topic: "/map_incomplete"
 dijkstra_topic: "/dijkstra"
 trajectory_topic: "/trajectory"
+num_unknown_topic: "/num_unknown"
 
 poisson_rate: 0.1
-num_mi_points: 10
+num_mi_points: 5
 mi_angular_steps: 200
 mi_spatial_steps: 500
 condition_steps: 10000

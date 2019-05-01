@@ -143,11 +143,11 @@ void wandering_robot::GridWanderer::dijkstra(
     std::vector<unsigned int> & parents) {
 
   // Create arrays of distances and parents
-  distances = std::vector<double>(map.size(), std::numeric_limits<double>::max());
-  parents = std::vector<unsigned int>(map.size());
+  distances = std::vector<double>(states_.size(), std::numeric_limits<double>::max());
+  parents = std::vector<unsigned int>(states_.size());
 
   // Initialize the nodes and set the distance to zero
-  std::vector<bool> closed_set(map.size(), false);
+  std::vector<bool> closed_set(states_.size(), false);
   std::vector<unsigned int> open_set = {start};
   distances[start] = 0;
 
@@ -188,7 +188,7 @@ void wandering_robot::GridWanderer::dijkstra(
         if (closed_set[neighbor]) continue;
 
         // Ignore if the cell is not free
-        if (map[neighbor] != OccupancyState::free) continue;
+        if (states_[neighbor] != OccupancyState::free) continue;
 
         // Update the new distance
         double new_distance = distances[current] +
