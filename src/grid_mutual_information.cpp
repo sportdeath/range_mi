@@ -64,26 +64,36 @@ double wandering_robot::GridMutualInformation::compute_mi(
 }
 
 void wandering_robot::GridMutualInformation::compute_mi_surface(
-    unsigned int spatial_steps,
-    unsigned int angular_steps) {
+    unsigned int spatial_jitter,
+    unsigned int num_beams) {
 
   reset_mi_surface();
 
   // Iterate over the steps and accumulate mi across the map
-  for (unsigned int i = 0; i < spatial_steps; i++)
-    for (unsigned int j = 0; j < angular_steps; j++)
-      compute_mi_surface_beam(i/((double)spatial_steps), j/((double)angular_steps));
+  double spatial_interpolation = 0;
+  double angular_interpolation = 0;
+  while (angular_interpolation < 1)
+    compute_mi_surface_beam(
+        spatial_interpolation,
+        angular_interpolation,
+        spatial_jitter,
+        num_beams);
 }
 
 void wandering_robot::GridMutualInformation::compute_mi_surface_beam(
-    double spatial_interpolation,
-    double angular_interpolation) {
+    double & spatial_interpolation,
+    double & angular_interpolation,
+    unsigned int spatial_jitter,
+    unsigned int num_beams) {
 
   // Convert the interpolation parameters to
   // x, y, theta
-  grid_line.sample_regularly(x, y, theta,
+  grid_line.sample_regularly(
+      x, y, theta,
       spatial_interpolation,
-      angular_interpolation);
+      angular_interpolation,
+      spatial_jitter,
+      num_beams);
 
   // Compute the intersections of
   // the line with the grid

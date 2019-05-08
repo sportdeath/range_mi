@@ -29,10 +29,12 @@ class GridMutualInformation {
      * Compute the mutual information between the map
      * and measurements made from each cell on the map.
      */
-    void compute_mi_surface(unsigned int spatial_steps, unsigned int angular_steps);
+    void compute_mi_surface(unsigned int spatial_jitter, unsigned int num_beams);
     const std::vector<double> & mi_surface() const {return mi_;}
     void reset_mi_surface() {std::fill(mi_.begin(), mi_.end(), 0);}
-    void compute_mi_surface_beam(double spatial_interpolation, double angular_interpolation);
+    void compute_mi_surface_beam(
+        double & spatial_interpolation, double & angular_interpolation,
+        unsigned int spatial_jitter, unsigned int num_beams);
 
     void reset_p_not_measured() {std::fill(p_not_measured_.begin(), p_not_measured_.end(), 1);}
     void condition(unsigned int cell, unsigned int angular_steps);

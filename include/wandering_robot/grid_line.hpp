@@ -26,7 +26,7 @@ class GridLine {
         double theta,
         unsigned int * const line,
         double * const widths,
-        unsigned int & num_cells);
+        unsigned int & num_cells) const;
 
     void draw(
         unsigned int cell,
@@ -35,17 +35,14 @@ class GridLine {
         double * const widths,
         unsigned int & num_cells);
 
-    void sample(
-        double & x,
-        double & y,
-        double & theta);
-
     void sample_regularly(
         double & x,
         double & y,
         double & theta,
-        double spatial_interpolation,
-        double angular_interpolation);
+        double & spatial_interpolation,
+        double & angular_interpolation,
+        unsigned int spatial_jitter,
+        unsigned int num_beams) const;
 
     unsigned int size() {
       return 2 * std::max(height, width);

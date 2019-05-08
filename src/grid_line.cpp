@@ -9,7 +9,7 @@ void wandering_robot::GridLine::draw(
     double theta,
     unsigned int * const line,
     double * const widths,
-    unsigned int & num_cells) {
+    unsigned int & num_cells) const {
 
   // Pre-compute sin and cos
   double sin = std::sin(theta);
@@ -74,25 +74,21 @@ void wandering_robot::GridLine::draw(
     unsigned int * const line,
     double * const widths,
     unsigned int & num_cells) {
+
   // Convert to x, y and jitter around cell
   unsigned int y = cell/width;
   unsigned int x = cell - y * width;
   draw(x + dist(gen), y + dist(gen), theta, line, widths, num_cells);
 }
 
-void wandering_robot::GridLine::sample(
-    double & x,
-    double & y,
-    double & theta) {
-  sample_regularly(x, y, theta, dist(gen), dist(gen));
-}
-
 void wandering_robot::GridLine::sample_regularly(
     double & x,
     double & y,
     double & theta,
-    double spatial_interpolation,
-    double angular_interpolation) {
+    double & spatial_interpolation,
+    double & angular_interpolation,
+    unsigned int spatial_jitter,
+    unsigned int num_beams) const {
 
   // Calculate theta
   theta = 2 * M_PI * angular_interpolation;
@@ -110,6 +106,16 @@ void wandering_robot::GridLine::sample_regularly(
   double perimeter =
     (normalized_width + normalized_height) *
     spatial_interpolation;
+
+  // Compute the number of steps that must be made
+  double steps = (normalized_width + normalized_height)/(c_abs + s_abs);
+  // Use it to update the interpolation
+  spatial_interpolation += 1./(spatial_jitter * steps);
+  // Update if necessary
+  if (spatial_interpolation >= 1) {
+    spatial_interpolation = 0;
+    angular_interpolation += 1./num_beams;
+  }
 
   if (perimeter < normalized_width) {
     x = perimeter/s_abs;

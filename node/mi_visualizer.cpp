@@ -18,8 +18,8 @@ class MutualInformationVisualizer {
       n.getParam("p_not_measured_topic", p_not_measured_topic);
       n.getParam("click_topic", click_topic);
       n.getParam("map_topic", map_topic);
-      n.getParam("mi_angular_steps", mi_angular_steps);
-      n.getParam("mi_spatial_steps", mi_spatial_steps);
+      n.getParam("spatial_jitter", spatial_jitter);
+      n.getParam("num_beams", num_beams);
       n.getParam("condition_steps", condition_steps);
       n.getParam("unknown_threshold", unknown_threshold);
       n.getParam("poisson_rate", poisson_rate);
@@ -68,16 +68,25 @@ class MutualInformationVisualizer {
     void compute_mi(bool first) {
       mi.reset_mi_surface();
 
-      for (int i = 0; i < mi_angular_steps; i++) {
-        //mi.reset_mi_surface();
-        for (int j = 0; j < mi_spatial_steps; j++) {
-          mi.compute_mi_surface_beam(j/((double)mi_spatial_steps), i/((double)mi_angular_steps));
+      double spatial_interpolation = 0;
+      double angular_interpolation = 0;
+      while (angular_interpolation < 1) {
+        // Add the beam
+        mi.compute_mi_surface_beam(
+            spatial_interpolation,
+            angular_interpolation,
+            spatial_jitter,
+            num_beams);
+
+        // Draw every time a spatial section is completed
+        if (spatial_interpolation == 0) {
+          if (first) {
+            mi_max = *std::max_element(mi.mi_surface().begin(), mi.mi_surface().end());
+          }
+          draw_map();
+          //mi.reset_mi_surface();
+          if (not ros::ok()) break;
         }
-        if (first) {
-          mi_max = *std::max_element(mi.mi_surface().begin(), mi.mi_surface().end());
-        }
-        draw_map();
-        if (not ros::ok()) break;
       }
     }
 
@@ -123,7 +132,7 @@ class MutualInformationVisualizer {
     // Parameters
     double poisson_rate, unknown_threshold;
     bool beam_independence;
-    int mi_spatial_steps, mi_angular_steps;
+    int spatial_jitter, num_beams;
     int condition_steps;
     double mi_max;
 
