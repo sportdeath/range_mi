@@ -1,17 +1,11 @@
 mi_topic: "/mi"
 p_not_measured_topic: "/p_not_measured"
-mi_points_topic: "/mi_points"
 map_topic: "/map"
 click_topic: "/clicked_point"
-map_incomplete_topic: "/map_incomplete"
-dijkstra_topic: "/dijkstra"
-trajectory_topic: "/trajectory"
-num_unknown_topic: "/num_unknown"
 
 poisson_rate: 0.1
-num_mi_points: 5
-mi_angular_steps: 200
-mi_spatial_steps: 500
+num_beams: 400
+spatial_jitter: 2
 condition_steps: 10000
 unknown_threshold: 0.1
 beam_independence: true
