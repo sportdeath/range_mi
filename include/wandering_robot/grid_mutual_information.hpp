@@ -43,13 +43,13 @@ class GridMutualInformation {
 
   private:
 
-    // Parameters
-    bool beam_independence;
-
     // The mutual information and other maps
     const std::vector<wandering_robot::OccupancyState> * states;
     std::vector<double> mi_;
     std::vector<double> p_not_measured_;
+
+    // Parameters
+    bool beam_independence;
 
     // Computation devices
     wandering_robot::GridLine grid_line;

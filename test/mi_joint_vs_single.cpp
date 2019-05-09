@@ -33,6 +33,8 @@ int main() {
   // Initialize the mutual information
   MutualInformation mi(poisson_rate);
 
+  double max_error_1d = 0;
+  double max_error_2d = 0;
   for (int i = 0; i < num_iterations; i++) {
     // Generate random cells
     random_states(states);
@@ -72,26 +74,19 @@ int main() {
       time_2d_individual += std::chrono::duration<double>(end - start).count();
 
       double error_1d = std::abs(mi_1d_cell - mi_1d[j]);
-      if (error_1d > 0.000001) {
-        std::cout <<
-          "MI from single computation: " << mi_1d_cell <<
-          ", MI from joint computation " << mi_1d[j] << std::endl;
-        return -1;
-      }
+      if (error_1d > max_error_1d) max_error_1d = error_1d;
       double error_2d = std::abs(mi_2d_cell - mi_2d[j]);
-      if (error_2d > 0.000001) {
-        std::cout <<
-          "MI from single computation 2D: " << mi_2d_cell <<
-          ", MI from joint computation 2D: " << mi_2d[j] << std::endl;
-        return -1;
-      }
+      if (error_2d > max_error_2d) max_error_2d = error_2d;
     }
   }
 
   std::cout << "1D individual time: " << time_1d_individual  << " seconds" << std::endl;
   std::cout << "1D joint time: " << time_1d_joint  << " seconds" << std::endl;
+  std::cout << "Max error between 1d individual and joint computation: " << max_error_1d << std::endl;
+  std::cout << std::endl;
   std::cout << "2D individual time: " << time_2d_individual  << " seconds" << std::endl;
   std::cout << "2D joint time: " << time_2d_joint  << " seconds" << std::endl;
+  std::cout << "Max error between 2d individual and joint computation: " << max_error_2d << std::endl;
 
   return 0;
 }
