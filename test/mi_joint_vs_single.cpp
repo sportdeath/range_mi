@@ -11,7 +11,7 @@ using namespace wandering_robot;
 
 // Initialize constants
 double poisson_rate = 0.1234;
-int num_iterations = 1000;
+int num_iterations = 100;
 size_t num_cells = 1000;
 
 int main() {
