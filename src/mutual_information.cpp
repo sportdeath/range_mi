@@ -143,3 +143,85 @@ void wandering_robot::MutualInformation::condition(
     double unknown_length) {
   p_not_measured *= (1 - std::exp(-poisson_rate * unknown_length));
 }
+
+double wandering_robot::MutualInformation::d1_fsmi(
+    const OccupancyState * const states,
+    unsigned int num_cells,
+    double width,
+    double standard_deviation,
+    unsigned int gaussian_width,
+    double delta_emp,
+    double detla_occ) {
+
+  // Initialize the total mutual information to zero
+  double mi = 0;
+
+  // The probability of hitting a cell
+  // decreases over time
+  double probability_of_hitting_cell = 1;
+
+  // The MI contribution
+  double mi_contribution = 0;
+  std::vector<double> mi_contributions(num_cells);
+  for (unsigned int i = 0; i < num_cells; i++) {
+    mi_contributions[i] = mi_contribution + f(delta_occ, state[i]);
+    mi_contribution += f(delta_emp, state[i]) ;
+
+    // Update the mutual information contribtion
+    double mi_contribution;
+    fsmi_contribution(delta, state) {
+      if (state == free) {
+        // r = 0
+        // f = log(delta) (1 - 1/(delta + 1))
+      } else if (state == occupied) {
+        // r == infinity
+        // f = 0
+      } else if (state == unknown) {
+        // r = 1? or exp(-poisson_rate)/(1 - exp(-poisson_rate)
+      }
+    }
+  }
+
+  // Loop over the cells
+  for (unsigned int i = 0; i < num_cells; i++) {
+
+    // Loop over the Gaussian width
+    for (unsigned int j = -gaussian_width; j <= gaussian_width; j++) {
+      // Make sure we don't go over the boundary
+      if (i + j < 0 or i + j >= num_cells) continue;
+
+      // Compute the integral of the Gaussian centered
+      // at (i + 0.5), across cells i + j to i + j + 1
+      // 
+      // As the std deviation -> 0 this becomes 1
+      // for cell i and 0 elsewhere.
+      double mean = width * (i + 0.5);
+      double left = width * (i + j);
+      double right = width * (i + j + 1);
+      double gaussian_weight = 0.5 * (
+          std::erf((right - mean)/(std::sqrt(2) * standard_deviation)) -
+          std::erf((left - mean)/(std::sqrt(2) * standard_deviation)));
+
+      // Accumulate the mutual information
+      mi +=
+        probability_of_hitting_cell *
+        gaussian_weight *
+        mi_contributions[i + j];
+    }
+
+    // Update the probability of hitting the next cell
+    if (states[i] == wandering_robot::OccupancyState::occupied) {
+      // Go to zero!
+      probability_of_hitting_cell = 0;
+    } else if (states[i] == wandering_robot::OccupancyState::unknown) {
+      // The probability decreases according to the Poisson distribution
+      // If poisson_rate = log(2) then this is equal to
+      // 1 - 0.5 ^ width
+      probability_of_hitting_cell *=
+        (1 - std::exp(-poisson_rate * width));
+    }
+
+  }
+
+  return mi;
+}

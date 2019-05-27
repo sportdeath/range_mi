@@ -84,7 +84,7 @@ class MutualInformationVisualizer {
             mi_max = *std::max_element(mi.mi_surface().begin(), mi.mi_surface().end());
           }
           draw_map();
-          //mi.reset_mi_surface();
+          mi.reset_mi_surface();
           if (not ros::ok()) break;
         }
       }

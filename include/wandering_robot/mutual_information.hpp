@@ -4,6 +4,11 @@
 
 namespace wandering_robot {
 
+/**
+ * A class for computing the mutual
+ * information between lidar beams and
+ * probabilistic occupancy cells.
+ */
 class MutualInformation {
 
   public:
@@ -33,6 +38,17 @@ class MutualInformation {
         unsigned int num_cells);
 
     /**
+     * The same as above using the FSMI formula.
+     */
+    double d1_fsmi(
+        const OccupancyState * const states,
+        unsigned int num_cells,
+        double width, // FSMI does not support multiple widths
+        double gaussian_width, // In number of cells
+        double delta_emp, // The log probability of occupied
+        double detla_occ);
+
+    /**
      * Compute the mutual information between the
      * occupancy states and range measurements taken
      * from each cell i pointing towards cells
@@ -46,12 +62,17 @@ class MutualInformation {
         unsigned int num_cells,
         double * const mutual_information);
 
+    /**
+     * The same as above but in 2D,
+     * i.e. accounting for the fact area
+     * spanned by the beams increases linearly
+     * with the distance away from the source.
+     */
     double d2(
         const OccupancyState * const states,
         const double * const widths,
         const double * const p_not_measured,
         unsigned int num_cells);
-
     void d2(
         const OccupancyState * const states,
         const double * const widths,
