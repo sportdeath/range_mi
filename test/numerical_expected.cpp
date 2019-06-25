@@ -62,6 +62,12 @@ double distance2(double r, double pdf) {
 double information1(double r, double pdf) {
   return -std::log(pdf);
 }
+double information2(double r, double pdf) {
+  return -r * std::log(pdf);
+}
+double information3(double r, double pdf) {
+  return -r * r * std::log(pdf);
+}
 
 // Initialize random generator
 std::random_device random_device;
@@ -95,6 +101,12 @@ int main() {
   double numerical_expected_information1 =
     numerical_expected(
         p_free, width, information1);
+  double numerical_expected_information2 =
+    numerical_expected(
+        p_free, width, information2);
+  double numerical_expected_information3 =
+    numerical_expected(
+        p_free, width, information3);
 
   // Compute the values exactly
   double expected_distance1 =
@@ -106,8 +118,16 @@ int main() {
   double expected_information1 =
     expected::information1(
         p_free, p_not_measured, width)[0];
+  double expected_information2 =
+    expected::information2(
+        p_free, p_not_measured, width)[0];
+  double expected_information3 =
+    expected::information3(
+        p_free, p_not_measured, width)[0];
 
   std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1 << std::endl;
   std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2 << std::endl;
-  std::cout << "i2: " << numerical_expected_information1 << ", " << expected_information1 << std::endl;
+  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1 << std::endl;
+  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2 << std::endl;
+  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3 << std::endl;
 }

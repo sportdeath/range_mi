@@ -113,6 +113,42 @@ double range_entropy::expected::information1(
   return l.hit_p * hit_info + l.miss_p * miss_info;
 }
 
+double range_entropy::expected::information2(
+    const local & l,
+    double distance1_,
+    double information1_,
+    double information2_) {
+
+  double miss_info =
+    information2_ + l.miss_info * distance1_ +
+    l.width * (information1_ + l.miss_info);
+
+  double hit_info = l.width * (
+      (2 + l.zero_info) * l.miss_info_inv - l.miss_odds * (2 + l.miss_info + l.zero_info));
+
+  return l.hit_p * hit_info + l.miss_p * miss_info;
+}
+
+double range_entropy::expected::information3(
+    const local & l,
+    double distance1_,
+    double distance2_,
+    double information1_,
+    double information2_,
+    double information3_) {
+
+  double miss_info =
+    information3_ + l.miss_info * distance2_ +
+    2 * l.width * (information2_ + l.miss_info * distance1_) +
+    l.width * l.width * (information1_ + l.miss_info);
+
+  double hit_info = l.width * l.width * (
+      (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
+      l.miss_odds * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
+
+  return l.hit_p * hit_info + l.miss_p * miss_info;
+}
+
 std::vector<double> range_entropy::expected::distance1(
     const std::vector<double> & p_free,
     const std::vector<double> & p_not_measured,
@@ -163,6 +199,54 @@ std::vector<double> range_entropy::expected::information1(
     update_local(p_free[i], p_not_measured[i], width[i], l);
     i1 = information1(l, i1);
     out[i] = i1;
+  }
+
+  return out;
+}
+
+std::vector<double> range_entropy::expected::information2(
+    const std::vector<double> & p_free,
+    const std::vector<double> & p_not_measured,
+    const std::vector<double> & width) {
+
+  std::vector<double> out(p_free.size());
+  local l;
+
+  double d1 = 0;
+  double i1 = 0;
+  double i2 = 0;
+  for (int i = p_free.size() - 1; i >= 0; i--) {
+    update_local(p_free[i], p_not_measured[i], width[i], l);
+    i2 = information2(l, d1, i1, i2);
+    i1 = information1(l, i1);
+    d1 = distance1(l, d1);
+    out[i] = i2;
+  }
+
+  return out;
+}
+
+std::vector<double> range_entropy::expected::information3(
+    const std::vector<double> & p_free,
+    const std::vector<double> & p_not_measured,
+    const std::vector<double> & width) {
+
+  std::vector<double> out(p_free.size());
+  local l;
+
+  double d1 = 0;
+  double d2 = 0;
+  double i1 = 0;
+  double i2 = 0;
+  double i3 = 0;
+  for (int i = p_free.size() - 1; i >= 0; i--) {
+    update_local(p_free[i], p_not_measured[i], width[i], l);
+    i3 = information3(l, d1, d2, i1, i2, i3);
+    i2 = information2(l, d1, i1, i2);
+    i1 = information1(l, i1);
+    d2 = distance2(l, d1, d2);
+    d1 = distance1(l, d1);
+    out[i] = i3;
   }
 
   return out;

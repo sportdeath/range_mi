@@ -58,7 +58,19 @@ double distance2(
  */
 double information1(
     const local & l,
-    double information1);
+    double information1_);
+double information2(
+    const local & l,
+    double distance1_,
+    double information1_,
+    double information2_);
+double information3(
+    const local & l,
+    double distance1_,
+    double distance2_,
+    double information1_,
+    double information2_,
+    double information3_);
 
 /**
  * Functions for the above that apply to
@@ -73,6 +85,14 @@ std::vector<double> distance2(
     const std::vector<double> & p_not_measured,
     const std::vector<double> & width);
 std::vector<double> information1(
+    const std::vector<double> & p_free,
+    const std::vector<double> & p_not_measured,
+    const std::vector<double> & width);
+std::vector<double> information2(
+    const std::vector<double> & p_free,
+    const std::vector<double> & p_not_measured,
+    const std::vector<double> & width);
+std::vector<double> information3(
     const std::vector<double> & p_free,
     const std::vector<double> & p_not_measured,
     const std::vector<double> & width);
