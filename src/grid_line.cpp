@@ -1,9 +1,9 @@
 #include <cmath>
 #include <utility>
 
-#include "wandering_robot/grid_line.hpp"
+#include "range_entropy/grid_line.hpp"
 
-void wandering_robot::GridLine::draw(
+void range_entropy::GridLine::draw(
     double x,
     double y,
     double theta,
@@ -68,7 +68,7 @@ void wandering_robot::GridLine::draw(
   }
 }
 
-void wandering_robot::GridLine::draw(
+void range_entropy::GridLine::draw(
     unsigned int cell,
     double theta,
     unsigned int * const line,
@@ -81,7 +81,7 @@ void wandering_robot::GridLine::draw(
   draw(x + dist(gen), y + dist(gen), theta, line, widths, num_cells);
 }
 
-void wandering_robot::GridLine::sample_regularly(
+void range_entropy::GridLine::sample_regularly(
     double & x,
     double & y,
     double & theta,

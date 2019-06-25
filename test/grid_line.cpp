@@ -1,9 +1,9 @@
 #include <vector>
 #include <cassert>
 
-#include <wandering_robot/grid_line.hpp>
+#include <range_entropy/grid_line.hpp>
 
-using namespace wandering_robot;
+using namespace range_entropy;
 
 double eps = 0.0001;
 unsigned int max_cells = 1000;

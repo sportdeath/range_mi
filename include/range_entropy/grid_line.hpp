@@ -3,7 +3,7 @@
 #include <random>
 #include <algorithm>
 
-namespace wandering_robot {
+namespace range_entropy {
 
 class GridLine {
 

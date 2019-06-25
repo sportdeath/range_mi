@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(wandering_robot)
+project(range_entropy)
 
 set(CMAKE_CXX_STANDARD 11)
 
