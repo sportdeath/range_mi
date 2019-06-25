@@ -1,5 +1,4 @@
 #include <cmath>
-#include <vector>
 
 #include "range_entropy/expected.hpp"
 
@@ -149,105 +148,104 @@ double range_entropy::expected::information3(
   return l.hit_p * hit_info + l.miss_p * miss_info;
 }
 
-std::vector<double> range_entropy::expected::distance1(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width) {
+void range_entropy::expected::distance1(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
+    double * const distance1_) {
 
-  std::vector<double> out(p_free.size());
   local l;
 
   double d1 = 0;
-  for (int i = p_free.size() - 1; i >= 0; i--) {
-    update_local(p_free[i], p_not_measured[i], width[i], l);
+  for (int i = num_cells - 1; i >= 0; i--) {
+    unsigned int j = line[i];
+    update_local(p_free[j], p_not_measured[j], width[i], l);
     d1 = distance1(l, d1);
-    out[i] = d1;
+    distance1_[j] += d1;
   }
-
-  return out;
 }
 
-std::vector<double> range_entropy::expected::distance2(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width) {
+void range_entropy::expected::distance2(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
+    double * const distance2_) {
 
-  std::vector<double> out(p_free.size());
   local l;
 
   double d1 = 0, d2 = 0;
-  for (int i = p_free.size() - 1; i >= 0; i--) {
-    update_local(p_free[i], p_not_measured[i], width[i], l);
+  for (int i = num_cells - 1; i >= 0; i--) {
+    unsigned int j = line[i];
+    update_local(p_free[j], p_not_measured[j], width[i], l);
     d2 = distance2(l, d1, d2);
     d1 = distance1(l, d1);
-    out[i] = d2;
+    distance2_[j] += d2;
   }
-
-  return out;
 }
 
-std::vector<double> range_entropy::expected::information1(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width) {
+void range_entropy::expected::information1(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
+    double * const information1_) {
 
-  std::vector<double> out(p_free.size());
   local l;
 
   double i1 = 0;
-  for (int i = p_free.size() - 1; i >= 0; i--) {
-    update_local(p_free[i], p_not_measured[i], width[i], l);
+  for (int i = num_cells - 1; i >= 0; i--) {
+    unsigned int j = line[i];
+    update_local(p_free[j], p_not_measured[j], width[i], l);
     i1 = information1(l, i1);
-    out[i] = i1;
+    information1_[j] += i1;
   }
-
-  return out;
 }
 
-std::vector<double> range_entropy::expected::information2(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width) {
+void range_entropy::expected::information2(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
+    double * const information2_) {
 
-  std::vector<double> out(p_free.size());
   local l;
 
-  double d1 = 0;
-  double i1 = 0;
-  double i2 = 0;
-  for (int i = p_free.size() - 1; i >= 0; i--) {
-    update_local(p_free[i], p_not_measured[i], width[i], l);
+  double d1 = 0, i1 = 0, i2 = 0;
+  for (int i = num_cells - 1; i >= 0; i--) {
+    unsigned int j = line[i];
+    update_local(p_free[j], p_not_measured[j], width[i], l);
     i2 = information2(l, d1, i1, i2);
     i1 = information1(l, i1);
     d1 = distance1(l, d1);
-    out[i] = i2;
+    information2_[j] += i2;
   }
-
-  return out;
 }
 
-std::vector<double> range_entropy::expected::information3(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width) {
+void range_entropy::expected::information3(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
+    double * const information3_) {
 
-  std::vector<double> out(p_free.size());
   local l;
 
-  double d1 = 0;
-  double d2 = 0;
-  double i1 = 0;
-  double i2 = 0;
-  double i3 = 0;
-  for (int i = p_free.size() - 1; i >= 0; i--) {
-    update_local(p_free[i], p_not_measured[i], width[i], l);
+  double d1 = 0, d2 = 0, i1 = 0, i2 = 0, i3 = 0;
+  for (int i = num_cells - 1; i >= 0; i--) {
+    unsigned int j = line[i];
+    update_local(p_free[j], p_not_measured[j], width[i], l);
     i3 = information3(l, d1, d2, i1, i2, i3);
     i2 = information2(l, d1, i1, i2);
     i1 = information1(l, i1);
     d2 = distance2(l, d1, d2);
     d1 = distance1(l, d1);
-    out[i] = i3;
+    information3_[j] += i3;
   }
-
-  return out;
 }

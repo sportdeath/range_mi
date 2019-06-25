@@ -12,8 +12,11 @@ double integration_step = 0.00001;
 unsigned int num_cells = 100;
 
 double numerical_expected(
-    const std::vector<double> & p_free,
-    const std::vector<double> & width,
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const width,
+    unsigned int num_cells,
     double (*value)(double,double)) {
 
   unsigned int i = 0;
@@ -22,12 +25,14 @@ double numerical_expected(
   double pdf_decay = 1;
   double cdf = 0;
   double integral = 0;
-  while (i < p_free.size()) {
+  while (i < num_cells) {
+    unsigned int j = line[i];
+
     // Compute the pdf
     double pdf = 
       pdf_decay * (
-          -std::pow(p_free[i], r - width_sum) *
-          std::log(p_free[i]));
+          -std::pow(p_free[j], r - width_sum) *
+          std::log(p_free[j]));
 
     // Accumulate
     integral +=
@@ -41,7 +46,7 @@ double numerical_expected(
     if (r - width_sum > width[i]) {
       // Cell completed,
       // move to the next cell!
-      pdf_decay *= std::pow(p_free[i], width[i]);
+      pdf_decay *= std::pow(p_free[j], width[i]);
       width_sum += width[i];
       i++;
     }
@@ -91,43 +96,57 @@ int main() {
   random_p(p_not_measured);
   random_p(width);
 
+  // Make a line
+  std::vector<unsigned int> line(num_cells);
+  std::iota(line.begin(), line.end(), 0);
+
   // Compute the values numerically
   double numerical_expected_distance1 =
     numerical_expected(
-        p_free, width, distance1);
+        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        distance1);
   double numerical_expected_distance2 =
     numerical_expected(
-        p_free, width, distance2);
+        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        distance2);
   double numerical_expected_information1 =
     numerical_expected(
-        p_free, width, information1);
+        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        information1);
   double numerical_expected_information2 =
     numerical_expected(
-        p_free, width, information2);
+        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        information2);
   double numerical_expected_information3 =
     numerical_expected(
-        p_free, width, information3);
+        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        information3);
 
   // Compute the values exactly
-  double expected_distance1 =
-    expected::distance1(
-        p_free, p_not_measured, width)[0];
-  double expected_distance2 =
-    expected::distance2(
-        p_free, p_not_measured, width)[0];
-  double expected_information1 =
-    expected::information1(
-        p_free, p_not_measured, width)[0];
-  double expected_information2 =
-    expected::information2(
-        p_free, p_not_measured, width)[0];
-  double expected_information3 =
-    expected::information3(
-        p_free, p_not_measured, width)[0];
+  std::vector<double> expected_distance1(num_cells, 0),
+                      expected_distance2(num_cells, 0),
+                      expected_information1(num_cells, 0),
+                      expected_information2(num_cells, 0),
+                      expected_information3(num_cells, 0);
+  expected::distance1(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      expected_distance1.data());
+  expected::distance2(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      expected_distance2.data());
+  expected::information1(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      expected_information1.data());
+  expected::information2(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      expected_information2.data());
+  expected::information3(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      expected_information3.data());
 
-  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1 << std::endl;
-  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2 << std::endl;
-  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1 << std::endl;
-  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2 << std::endl;
-  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3 << std::endl;
+  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << std::endl;
+  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2[0] << std::endl;
+  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << std::endl;
+  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << std::endl;
+  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << std::endl;
 }

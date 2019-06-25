@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 /**
  * Computes a variety of quantities in expectation
  */
@@ -23,7 +21,7 @@ struct local {
 /**
  * Pre-computes quantities for
  * a region of size width, constant
- * occupancy probability p_occupied,
+ * volumetric probability of being free p_free
  * and probability of not being measured
  * by another independent sensor measurement
  * p_not_measured.
@@ -76,25 +74,40 @@ double information3(
  * Functions for the above that apply to
  * a vector of values.
  */
-std::vector<double> distance1(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width);
-std::vector<double> distance2(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width);
-std::vector<double> information1(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width);
-std::vector<double> information2(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width);
-std::vector<double> information3(
-    const std::vector<double> & p_free,
-    const std::vector<double> & p_not_measured,
-    const std::vector<double> & width);
+void distance1(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const p_width,
+    unsigned int num_cells,
+    double * const distance1_);
+void distance2(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const p_width,
+    unsigned int num_cells,
+    double * const distance2_);
+void information1(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const p_width,
+    unsigned int num_cells,
+    double * const information1_);
+void information2(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const p_width,
+    unsigned int num_cells,
+    double * const information2_);
+void information3(
+    const unsigned int * const line,
+    const double * const p_free,
+    const double * const p_not_measured,
+    const double * const p_width,
+    unsigned int num_cells,
+    double * const information3_);
 
 }}
