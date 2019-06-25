@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>wandering_robot</name>
+  <name>range_entropy</name>
   <version>0.0.0</version>
   <description>Tools for automously exploring an unknown environment.</description>
 

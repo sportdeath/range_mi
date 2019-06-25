@@ -68,27 +68,12 @@ void range_entropy::GridLine::draw(
   }
 }
 
-void range_entropy::GridLine::draw(
-    unsigned int cell,
-    double theta,
-    unsigned int * const line,
-    double * const widths,
-    unsigned int & num_cells) {
-
-  // Convert to x, y and jitter around cell
-  unsigned int y = cell/width;
-  unsigned int x = cell - y * width;
-  draw(x + dist(gen), y + dist(gen), theta, line, widths, num_cells);
-}
-
-void range_entropy::GridLine::sample_regularly(
+void range_entropy::GridLine::sample(
     double & x,
     double & y,
     double & theta,
     double & spatial_interpolation,
-    double & angular_interpolation,
-    unsigned int spatial_jitter,
-    unsigned int num_beams) const {
+    double & angular_interpolation) const {
 
   // Calculate theta
   theta = 2 * M_PI * angular_interpolation;

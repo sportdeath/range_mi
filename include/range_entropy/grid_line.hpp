@@ -1,6 +1,5 @@
 #pragma once
 
-#include <random>
 #include <algorithm>
 
 namespace range_entropy {
@@ -11,48 +10,33 @@ class GridLine {
 
     GridLine() {}
 
-    GridLine(unsigned int height_, unsigned int width_)
-      : height(height_), width(width_) {
-
-      // Initialize randomness
-      std::random_device random_device;
-      gen = std::mt19937(random_device());
-      dist = std::uniform_real_distribution<double>(0., 1.);
-    }
+    GridLine(unsigned int height_, unsigned int width_,
+        unsigned int spatial_jitter_, unsigned int num_beams_)
+      : height(height_), width(width_),
+        spatial_jitter(spatial_jitter_), num_beams(num_beams_)
+    {}
 
     void draw(
-        double col,
-        double row,
+        double x,
+        double y,
         double theta,
         unsigned int * const line,
         double * const widths,
         unsigned int & num_cells) const;
 
-    void draw(
-        unsigned int cell,
-        double theta,
-        unsigned int * const line,
-        double * const widths,
-        unsigned int & num_cells);
-
-    void sample_regularly(
+    void sample(
         double & x,
         double & y,
         double & theta,
         double & spatial_interpolation,
-        double & angular_interpolation,
-        unsigned int spatial_jitter,
-        unsigned int num_beams) const;
+        double & angular_interpolation) const;
 
-    unsigned int size() {
+    unsigned int size() const {
       return 2 * std::max(height, width);
     }
 
     unsigned int height, width;
-
-  private:
-    std::mt19937 gen;
-    std::uniform_real_distribution<double> dist;
+    unsigned int spatial_jitter, num_beams;
 };
 
 }
