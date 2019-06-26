@@ -11,7 +11,6 @@ struct local {
   double width;
   double p_not_measured;
   double miss_p;
-  double miss_odds;
   double miss_info;
   double miss_info_inv;
   double hit_p;

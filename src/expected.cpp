@@ -18,6 +18,10 @@ void range_entropy::expected::update_local(
     p_free = 0.0000001;
   }
 
+  if (width <= 0) {
+    width = 0.0000001;
+  }
+
   l.width = width;
   l.p_not_measured = p_not_measured;
 
@@ -35,9 +39,6 @@ void range_entropy::expected::update_local(
 
   // The converse of p_miss
   l.hit_p = 1 - l.miss_p;
-
-  // The odds of missing
-  l.miss_odds = l.miss_p/l.hit_p;
 
   // The amount of information learned if
   // a miss occurs
@@ -72,10 +73,10 @@ double range_entropy::expected::distance1(
 
   // If the range hits the cell the
   // expected distance can be evaluated analytically
-  double hit_distance1 = l.width * (l.miss_info_inv - l.miss_odds);
+  double hit_p_hit_distance1 = l.width * (l.hit_p * l.miss_info_inv - l.miss_p);
 
   // Return the expected value
-  return l.hit_p * hit_distance1 + l.miss_p * miss_distance1;
+  return hit_p_hit_distance1 + l.miss_p * miss_distance1;
 }
 
 double range_entropy::expected::distance2(
@@ -88,17 +89,16 @@ double range_entropy::expected::distance2(
   double miss_distance2 =
     distance2_ + 2 * l.width * distance1_ + l.width * l.width;
 
-  double hit_distance2 = l.width * l.width * (
-      2 * l.miss_info_inv * l.miss_info_inv - l.miss_odds * (l.miss_info + 2) * l.miss_info_inv);
+  double hit_p_hit_distance2 = l.width * l.width * (
+      2 * l.miss_info_inv * l.miss_info_inv * l.hit_p - l.miss_p * (l.miss_info + 2) * l.miss_info_inv);
   
   // Return the expected value
-  return l.hit_p * hit_distance2 + l.miss_p * miss_distance2;
+  return hit_p_hit_distance2 + l.miss_p * miss_distance2;
 }
 
 double range_entropy::expected::information1(
     const local & l,
     double information1_) {
-
   // If the range measurement misses
   // we gain all the information from the far
   // measurement plus the information gained
@@ -107,9 +107,9 @@ double range_entropy::expected::information1(
 
   // If the measurement hits then in expectation
   // we gain the following information
-  double hit_info = l.zero_info + 1 - l.miss_odds * l.miss_info;
+  double hit_p_hit_info = l.hit_p * (l.zero_info + 1) - l.miss_p * l.miss_info;
 
-  return l.hit_p * hit_info + l.miss_p * miss_info;
+  return hit_p_hit_info + l.miss_p * miss_info;
 }
 
 double range_entropy::expected::information2(
@@ -122,10 +122,10 @@ double range_entropy::expected::information2(
     information2_ + l.miss_info * distance1_ +
     l.width * (information1_ + l.miss_info);
 
-  double hit_info = l.width * (
-      (2 + l.zero_info) * l.miss_info_inv - l.miss_odds * (2 + l.miss_info + l.zero_info));
+  double hit_p_hit_info = l.width * (
+      l.hit_p * (2 + l.zero_info) * l.miss_info_inv - l.miss_p * (2 + l.miss_info + l.zero_info));
 
-  return l.hit_p * hit_info + l.miss_p * miss_info;
+  return hit_p_hit_info + l.miss_p * miss_info;
 }
 
 double range_entropy::expected::information3(
@@ -141,11 +141,11 @@ double range_entropy::expected::information3(
     2 * l.width * (information2_ + l.miss_info * distance1_) +
     l.width * l.width * (information1_ + l.miss_info);
 
-  double hit_info = l.width * l.width * (
-      (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
-      l.miss_odds * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
+  double hit_p_hit_info = l.width * l.width * (
+      l.hit_p * (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
+      l.miss_p * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
 
-  return l.hit_p * hit_info + l.miss_p * miss_info;
+  return hit_p_hit_info + l.miss_p * miss_info;
 }
 
 void range_entropy::expected::distance1(

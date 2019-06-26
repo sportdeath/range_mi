@@ -45,7 +45,7 @@ class EntropyVisualizer {
           p_free[i] = 0.5;
         }
 
-        p_free[i] = std::pow(p_free[i], 0.01);
+        p_free[i] = std::pow(p_free[i], 0.1);
       }
 
       // Initialize mutual information computation on the grid
@@ -99,9 +99,10 @@ class EntropyVisualizer {
     void draw_map() {
       // Construct a message for the mutual information surface
       nav_msgs::OccupancyGrid entropy_msg;
-      entropy_msg.data = std::vector<int8_t>(p_free.size());
-      for (size_t i = 0; i < entropy_msg.data.size(); i++) {
-        entropy_msg.data[i] = 100 * (1 - (grid_caster.surface()[i] - entropy_min)/(entropy_max - entropy_min));
+      entropy_msg.data = std::vector<int8_t>(grid_caster.surface().size());
+      for (size_t i = 0; i < grid_caster.surface().size(); i++) {
+        double normalized = (grid_caster.surface()[i] - entropy_min)/(entropy_max - entropy_min);
+        entropy_msg.data[i] = 100 * (1 - normalized);
       }
 
       // Add info
@@ -127,12 +128,12 @@ class EntropyVisualizer {
     // Parameters
     int spatial_jitter, num_beams;
     int condition_steps;
-    double entropy_max, entropy_min;
 
     // Map data
     nav_msgs::MapMetaData map_info;
     std::string map_frame_id;
     std::vector<double> p_free;
+    double entropy_min, entropy_max;
 
     // Computation devices
     range_entropy::GridExpected grid_caster;
