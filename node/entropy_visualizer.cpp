@@ -42,6 +42,7 @@ class EntropyVisualizer {
       for (unsigned int i = 0; i < p_free.size(); i++) {
         p_free[i] = 1 - map_msg.data[i]/100.;
         if (p_free[i] < 0 or p_free[i] > 1) {
+          std::cout << "Map contains invalid data" << std::endl;
           p_free[i] = 0.5;
         }
 
@@ -86,11 +87,10 @@ class EntropyVisualizer {
     }
 
     void click_callback(const geometry_msgs::PointStamped & click_msg) {
-      // Convert to map cell
-      unsigned int cell = ((int) click_msg.point.y) * map_info.width + ((int) click_msg.point.x);
-
       // Condition the map on the clicked point
-      //condition(cell, condition_steps);
+      double x = click_msg.point.x;
+      double y = click_msg.point.y;
+      grid_caster.condition(x, y, p_free.data());
 
       // Update the mutual information
       compute_entropy(false);
@@ -115,8 +115,8 @@ class EntropyVisualizer {
 
       // Do the same for p_not measured
       nav_msgs::OccupancyGrid p_not_measured_msg = entropy_msg;
-      //for (size_t i = 0; i < p_not_measured_msg.data.size(); i++)
-        //p_not_measured_msg.data[i] = 100 * (1 - .p_not_measured()[i]);
+      for (size_t i = 0; i < p_not_measured_msg.data.size(); i++)
+        p_not_measured_msg.data[i] = 100 * (1 - grid_caster.p_not_measured()[i]);
       p_not_measured_pub.publish(p_not_measured_msg);
     }
 

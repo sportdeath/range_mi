@@ -62,11 +62,10 @@ void random_p(std::vector<double> & p) {
 int main() {
   // Initialize the inputs and outputs
   std::vector<double> p_free(num_cells);
-  std::vector<double> p_not_measured(num_cells);
+  std::vector<double> p_not_measured(num_cells,1);
   std::vector<double> width(num_cells);
   // Randomize then
   random_p(p_free);
-  random_p(p_not_measured);
   random_p(width);
 
   // Make a line

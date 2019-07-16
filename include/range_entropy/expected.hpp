@@ -32,16 +32,25 @@ void update_local(
     local & l);
 
 /**
+ * The average probability of not measuring.
+ */
+double p_not_measured(
+    const local & l,
+    double p_not_measured_);
+
+/**
  * The first, second and third moment of
  * distance that the range measurement returns.
  */
 double distance1(
     const local & l,
-    double distance1_);
+    double distance1_,
+    double p_not_measured_=1);
 double distance2(
     const local & l,
     double distance1_,
-    double distance2_);
+    double distance2_,
+    double p_not_measured_=1);
 
 /**
  * The expected information gain of
@@ -55,19 +64,22 @@ double distance2(
  */
 double information1(
     const local & l,
-    double information1_);
+    double information1_,
+    double p_not_measured_=1);
 double information2(
     const local & l,
     double distance1_,
     double information1_,
-    double information2_);
+    double information2_,
+    double p_not_measured_=1);
 double information3(
     const local & l,
     double distance1_,
     double distance2_,
     double information1_,
     double information2_,
-    double information3_);
+    double information3_,
+    double p_not_measured_=1);
 
 /**
  * Functions for the above that apply to
@@ -108,5 +120,13 @@ void information3(
     const double * const p_width,
     unsigned int num_cells,
     double * const information3_);
+
+void p_not_measured(
+    const unsigned int * const line,
+    const double * const vacancy,
+    const double * const width,
+    unsigned int num_cells,
+    unsigned int dimension,
+    double * const p_not_measured1_);
 
 }}

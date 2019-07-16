@@ -4,5 +4,5 @@ map_topic: "/map"
 click_topic: "/clicked_point"
 
 num_beams: 600
-spatial_jitter: 1
+spatial_jitter: 4
 condition_steps: 10000

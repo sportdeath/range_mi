@@ -36,6 +36,7 @@ double numerical_expected(
 
     // Accumulate
     integral +=
+      p_not_measured[j] * 
       pdf * value(r, pdf) * integration_step;
 
     // Integrate the cdf

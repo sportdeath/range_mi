@@ -11,6 +11,8 @@ class GridExpected {
 private:
   // The computed surface
   std::vector<double> surface_;
+  std::vector<double> p_not_measured_;
+  std::vector<double> p_not_measured_single;
 
   // A computing device
   GridLine grid_line;
@@ -50,12 +52,23 @@ public:
       unsigned int,
       double * const));
 
+  void condition(
+      double x,
+      double y,
+      const double * const vacancy);
+
   void reset_surface() {
     std::fill(surface_.begin(), surface_.end(), 0);
+  }
+  void reset_p_not_measured() {
+    std::fill(p_not_measured_.begin(), p_not_measured_.end(), 1);
   }
 
   const std::vector<double> & surface() const {
     return surface_;
+  }
+  const std::vector<double> & p_not_measured() const {
+    return p_not_measured_;
   }
 };
 

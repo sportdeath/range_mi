@@ -1,3 +1,6 @@
+#include <cmath>
+
+#include "range_entropy/expected.hpp"
 #include "range_entropy/grid_line.hpp"
 #include "range_entropy/grid_expected.hpp"
 
@@ -12,12 +15,16 @@ range_entropy::GridExpected::GridExpected(
   // Set the expected value to zero
   surface_ = std::vector<double>(height * width, 0);
 
+  // Initialize the conditioning map
+  p_not_measured_ = std::vector<double>(height * width, 1);
+
   // Initialize the beam sampler
   grid_line = GridLine(height, width, spatial_jitter, num_beams);
 
   // Initialize the storage vectors
   line = std::vector<unsigned int>(grid_line.size());
   widths = std::vector<double>(grid_line.size());
+  p_not_measured_single = std::vector<double>(height * width, 0);
 }
 
 void range_entropy::GridExpected::compute_surface(
@@ -70,9 +77,45 @@ void range_entropy::GridExpected::compute_surface_beam(
   // Accumulate value along the line
   f(line.data(),
     p_free,
-    p_free, // TODO: change this
+    p_not_measured_.data(),
     widths.data(),
     num_cells,
     surface_.data());
+}
 
+void range_entropy::GridExpected::condition(
+    double x,
+    double y,
+    const double * const vacancy) {
+
+  // Clear the old p_measured
+  std::fill(p_not_measured_single.begin(), p_not_measured_single.end(), 0);
+
+  // Compute the new one for the given point
+  double theta = 0;
+  double theta_step = 2 * M_PI /((double) 100 * grid_line.num_beams);
+  for (unsigned int i = 0; i < 100 * grid_line.num_beams; i++) {
+    // Draw a line
+    grid_line.draw(
+        x, y, theta,
+        line.data(),
+        widths.data(),
+        num_cells);
+
+    // Accumulate p_measured along the line
+    range_entropy::expected::p_not_measured(
+        line.data(),
+        vacancy,
+        widths.data(),
+        num_cells,
+        2,
+        p_not_measured_single.data());
+
+    theta += theta_step;
+  }
+
+  // Update the probabilities
+  for (unsigned int i = 0; i < p_not_measured_.size(); i++) {
+    p_not_measured_[i] *= p_not_measured_single[i] * theta_step;
+  }
 }
