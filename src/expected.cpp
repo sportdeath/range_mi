@@ -279,8 +279,6 @@ void range_entropy::expected::p_not_measured(
     unsigned int dimension,
     double * const p_not_measured_) {
 
-  local l;
-
   double width_sum = 0;
   double miss_p_product = 1;
   double p_not_measured1_ = 0;
@@ -288,13 +286,23 @@ void range_entropy::expected::p_not_measured(
     unsigned int j = line[i];
     double miss_p = std::pow(vacancy[j], width[i]);
 
-    // TODO order these differently
-    p_not_measured1_ += miss_p_product * (1 - miss_p);
-    width_sum += width[i];
-    miss_p_product *= miss_p;
+    // Scale the probability by r^d to account
+    // for radial overlap as well as the width
+    // to account for aliasing.
     p_not_measured_[j] +=
       width[i] *
       std::pow(width_sum, dimension - 1) *
       p_not_measured1_;
+
+    // The probability of the next cell not being
+    // measured is the probability some previous
+    // combination of cells were missed followed
+    // by a hit.
+    //
+    // Also equal to the integral of the PDF of
+    // a range measurement from 0 to the cell.
+    p_not_measured1_ += miss_p_product * (1 - miss_p);
+    width_sum += width[i];
+    miss_p_product *= miss_p;
   }
 }
