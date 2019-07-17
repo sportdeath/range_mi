@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
 #include <nav_msgs/OccupancyGrid.h>
+#include <range_entropy/EntropyMap.h>
 #include <geometry_msgs/PointStamped.h>
 
 #include "range_entropy/grid_expected.hpp"
@@ -24,7 +25,8 @@ class EntropyVisualizer {
       n.getParam("condition_steps", condition_steps);
 
       // Construct a publisher for mutual information
-      entropy_pub = n.advertise<nav_msgs::OccupancyGrid>(entropy_topic, 1, true);
+      entropy_pub = n.advertise<range_entropy::EntropyMap>(entropy_topic, 1, true);
+      entropy_map_pub = n.advertise<nav_msgs::OccupancyGrid>(entropy_topic + "_map", 1, true);
       p_not_measured_pub = n.advertise<nav_msgs::OccupancyGrid>(p_not_measured_topic, 1, true);
 
       // Subscribe to maps and clicked points
@@ -98,23 +100,31 @@ class EntropyVisualizer {
 
     void draw_map() {
       // Construct a message for the mutual information surface
-      nav_msgs::OccupancyGrid entropy_msg;
-      entropy_msg.data = std::vector<int8_t>(grid_caster.surface().size());
-      for (size_t i = 0; i < grid_caster.surface().size(); i++) {
-        double normalized = (grid_caster.surface()[i] - entropy_min)/(entropy_max - entropy_min);
-        entropy_msg.data[i] = 100 * (1 - normalized);
-      }
-
-      // Add info
+      range_entropy::EntropyMap entropy_msg;
       entropy_msg.header.frame_id = map_frame_id;
       entropy_msg.header.stamp = ros::Time::now();
-      entropy_msg.info = map_info;
+      entropy_msg.data = grid_caster.surface();
+      entropy_msg.height = map_info.height;
+      entropy_msg.width = map_info.width;
+      entropy_msg.vmin = entropy_min;
+      entropy_msg.vmax = entropy_max;
 
       // Publish
       entropy_pub.publish(entropy_msg);
 
-      // Do the same for p_not measured
-      nav_msgs::OccupancyGrid p_not_measured_msg = entropy_msg;
+      // Convert to an occupancy map for visualization
+      nav_msgs::OccupancyGrid entropy_map_msg;
+      entropy_map_msg.header = entropy_msg.header;
+      entropy_map_msg.info = map_info;
+      entropy_map_msg.data = std::vector<int8_t>(grid_caster.surface().size());
+      for (size_t i = 0; i < grid_caster.surface().size(); i++) {
+        double normalized = (grid_caster.surface()[i] - entropy_min)/(entropy_max - entropy_min);
+        entropy_map_msg.data[i] = 100 * (1 - normalized);
+      }
+      entropy_map_pub.publish(entropy_map_msg);
+
+      // Do the same with p not measured
+      nav_msgs::OccupancyGrid p_not_measured_msg = entropy_map_msg;
       for (size_t i = 0; i < p_not_measured_msg.data.size(); i++)
         p_not_measured_msg.data[i] = 100 * (1 - grid_caster.p_not_measured()[i]);
       p_not_measured_pub.publish(p_not_measured_msg);
@@ -123,7 +133,9 @@ class EntropyVisualizer {
   private:
     ros::NodeHandle n;
     ros::Subscriber map_sub, click_sub;
-    ros::Publisher entropy_pub, p_not_measured_pub;
+    ros::Publisher entropy_pub,
+      entropy_map_pub,
+      p_not_measured_pub;
 
     // Parameters
     int spatial_jitter, num_beams;
