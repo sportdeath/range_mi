@@ -109,8 +109,9 @@ int main() {
   double fsmi_entropy = fsmi - (-std::log(cell_size));
 
   std::vector<double> expected_information1(num_cells, 0);
-  range_entropy::expected::information1(
+  range_entropy::expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      true, 1,
       expected_information1.data());
 
   std::cout << " FSMI entropy: " << fsmi_entropy << std::endl;

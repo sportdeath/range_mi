@@ -17,6 +17,15 @@ struct local {
   double zero_info;
 };
 
+struct expected {
+  double information3;
+  double information2;
+  double information1;
+  double distance2;
+  double distance1;
+  double p_not_measured;
+};
+
 /**
  * Pre-computes quantities for
  * a region of size width, constant
@@ -32,94 +41,52 @@ void update_local(
     local & l);
 
 /**
- * The average probability of not measuring.
+ * The expected value of the quantity if a
+ * hit occurs times p_hit
  */
-double p_not_measured(
-    const local & l,
-    double p_not_measured_);
+double p_not_measured_hit(const local & l);
+double distance1_hit(const local & l);
+double distance2_hit(const local & l);
+double information1_hit(const local & l);
+double information2_hit(const local & l);
+double information3_hit(const local & l);
 
 /**
- * The first, second and third moment of
- * distance that the range measurement returns.
+ * The expected value the quantity if a
+ * miss occurs (not times p_miss)
  */
-double distance1(
-    const local & l,
-    double distance1_,
-    double p_not_measured_=1);
-double distance2(
-    const local & l,
-    double distance1_,
-    double distance2_,
-    double p_not_measured_=1);
+double p_not_measured_miss(const local & l, const expected & exp);
+double distance1_miss(const local & l, const expected & exp);
+double distance2_miss(const local & l, const expected & exp);
+double information1_miss(const local & l, const expected & exp);
+double information2_miss(const local & l, const expected & exp);
+double information3_miss(const local & l, const expected & exp);
 
 /**
- * The expected information gain of
- * a range measurement for 1d, 2d and
- * 3d beams.
- *
- * The integrations for 2d and 3d beams
- * have multiplicative terms r and r^2
- * respectively to account for radial
- * expansion.
+ * The expected value of a quantity if
+ * a hit or miss occurs. The hit and miss
+ * functions for the particular value are
+ * passed as parameters
  */
-double information1(
+double hit_or_miss(
     const local & l,
-    double information1_,
-    double p_not_measured_=1);
-double information2(
-    const local & l,
-    double distance1_,
-    double information1_,
-    double information2_,
-    double p_not_measured_=1);
-double information3(
-    const local & l,
-    double distance1_,
-    double distance2_,
-    double information1_,
-    double information2_,
-    double information3_,
-    double p_not_measured_=1);
+    const expected & exp,
+    double (*hit)(const local &),
+    double (*miss)(const local &, const expected &));
 
 /**
- * Functions for the above that apply to
- * a vector of values.
+ * The expected values of a quantity
+ * along all cells in a line
  */
-void distance1(
+void line(
     const unsigned int * const line,
     const double * const p_free,
     const double * const p_not_measured,
-    const double * const p_width,
+    const double * const width,
     unsigned int num_cells,
-    double * const distance1_);
-void distance2(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const p_not_measured,
-    const double * const p_width,
-    unsigned int num_cells,
-    double * const distance2_);
-void information1(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const p_not_measured,
-    const double * const p_width,
-    unsigned int num_cells,
-    double * const information1_);
-void information2(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const p_not_measured,
-    const double * const p_width,
-    unsigned int num_cells,
-    double * const information2_);
-void information3(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const p_not_measured,
-    const double * const p_width,
-    unsigned int num_cells,
-    double * const information3_);
+    bool entropy,
+    unsigned int dimension,
+    double * const output);
 
 void p_not_measured(
     const unsigned int * const line,

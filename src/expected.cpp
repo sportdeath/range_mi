@@ -62,212 +62,172 @@ void range_entropy::expected::update_local(
   l.zero_info = -std::log(-std::log(p_free));
 }
 
-double range_entropy::expected::p_not_measured(
-    const local & l,
-    double p_not_measured_) {
-  return l.hit_p * l.p_not_measured + l.miss_p * p_not_measured_;
+double range_entropy::expected::p_not_measured_hit(
+    const local & l) {
+  return l.hit_p;
 }
 
-double range_entropy::expected::distance1(
-    const local & l,
-    double distance1_,
-    double p_not_measured_) {
+double range_entropy::expected::distance1_hit(
+    const local & l) {
+  return l.width * (l.hit_p * l.miss_info_inv - l.miss_p);
+}
 
+double range_entropy::expected::distance2_hit(
+    const local & l) {
+  return l.width * l.width * (
+      2 * l.miss_info_inv * l.miss_info_inv * l.hit_p - l.miss_p * (l.miss_info + 2) * l.miss_info_inv);
+}
+
+double range_entropy::expected::information1_hit(
+    const local & l) {
+  return l.hit_p * (l.zero_info + 1) - l.miss_p * l.miss_info;
+}
+
+double range_entropy::expected::information2_hit(
+    const local & l) {
+  return l.width * (
+      l.hit_p * (2 + l.zero_info) * l.miss_info_inv - l.miss_p * (2 + l.miss_info + l.zero_info));
+}
+
+double range_entropy::expected::information3_hit(
+    const local & l) {
+  return l.width * l.width * (
+      l.hit_p * (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
+      l.miss_p * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
+}
+
+double range_entropy::expected::p_not_measured_miss(
+    const local & l,
+    const expected & exp) {
+  (void) l;
+  return exp.p_not_measured;
+}
+
+double range_entropy::expected::distance1_miss(
+    const local & l,
+    const expected & exp) {
   // If the range misses the local cell,
   // the expected distance is simply the old
   // expected distance plus the width of the cell
-  double miss_distance1 = distance1_ + p_not_measured_ * l.width;
-
-  // If the range hits the cell the
-  // expected distance can be evaluated analytically
-  double hit_p_hit_distance1 = l.width * (l.hit_p * l.miss_info_inv - l.miss_p);
-
-  // Return the expected value
-  return l.p_not_measured * hit_p_hit_distance1 + l.miss_p * miss_distance1;
+  return exp.distance1 + exp.p_not_measured * l.width;
 }
 
-double range_entropy::expected::distance2(
+double range_entropy::expected::distance2_miss(
     const local & l,
-    double distance1_,
-    double distance2_,
-    double p_not_measured_) {
-
-  // If the range misses the local cell,
-  // the expected distance squared is as follows
-  double miss_distance2 =
-    distance2_ + 2 * l.width * distance1_ + p_not_measured_ * l.width * l.width;
-
-  double hit_p_hit_distance2 = l.width * l.width * (
-      2 * l.miss_info_inv * l.miss_info_inv * l.hit_p - l.miss_p * (l.miss_info + 2) * l.miss_info_inv);
-  
-  // Return the expected value
-  return l.p_not_measured * hit_p_hit_distance2 + l.miss_p * miss_distance2;
+    const expected & exp) {
+  return exp.distance2 + 2 * l.width * exp.distance1 + exp.p_not_measured * l.width * l.width;
 }
 
-double range_entropy::expected::information1(
+double range_entropy::expected::information1_miss(
     const local & l,
-    double information1_,
-    double p_not_measured_) {
+    const expected & exp) {
   // If the range measurement misses
   // we gain all the information from the far
   // measurement plus the information gained
   // by the fact that we missed.
-  double miss_info = information1_ + p_not_measured_ * l.miss_info;
-
-  // If the measurement hits then in expectation
-  // we gain the following information
-  double hit_p_hit_info = l.hit_p * (l.zero_info + 1) - l.miss_p * l.miss_info;
-
-  return l.p_not_measured * hit_p_hit_info + l.miss_p * miss_info;
+  return exp.information1 + exp.p_not_measured * l.miss_info;
 }
 
-double range_entropy::expected::information2(
+double range_entropy::expected::information2_miss(
     const local & l,
-    double distance1_,
-    double information1_,
-    double information2_,
-    double p_not_measured_) {
-
-  double miss_info =
-    information2_ + l.miss_info * distance1_ +
-    l.width * (information1_ + p_not_measured_ * l.miss_info);
-
-  double hit_p_hit_info = l.width * (
-      l.hit_p * (2 + l.zero_info) * l.miss_info_inv - l.miss_p * (2 + l.miss_info + l.zero_info));
-
-  return l.p_not_measured * hit_p_hit_info + l.miss_p * miss_info;
+    const expected & exp) {
+  return
+    exp.information2 + l.miss_info * exp.distance1 +
+    l.width * (exp.information1 + exp.p_not_measured * l.miss_info);
 }
 
-double range_entropy::expected::information3(
+double range_entropy::expected::information3_miss(
     const local & l,
-    double distance1_,
-    double distance2_,
-    double information1_,
-    double information2_,
-    double information3_,
-    double p_not_measured_) {
-
-  double miss_info =
-    information3_ + l.miss_info * distance2_ +
-    2 * l.width * (information2_ + l.miss_info * distance1_) +
-    l.width * l.width * (information1_ + p_not_measured_ * l.miss_info);
-
-  double hit_p_hit_info = l.width * l.width * (
-      l.hit_p * (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
-      l.miss_p * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
-
-  return l.p_not_measured * hit_p_hit_info + l.miss_p * miss_info;
+    const expected & exp) {
+  return
+    exp.information3 + l.miss_info * exp.distance2 +
+    2 * l.width * (exp.information2 + l.miss_info * exp.distance1) +
+    l.width * l.width * (exp.information1 + exp.p_not_measured * l.miss_info);
 }
 
-void range_entropy::expected::distance1(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const ps_not_measured,
-    const double * const width,
-    unsigned int num_cells,
-    double * const distance1_) {
+double range_entropy::expected::hit_or_miss(
+    const local & l,
+    const expected & exp,
+    double (*hit)(const local &),
+    double (*miss)(const local &, const expected &)) {
 
-  local l;
-
-  double d1 = 0;
-  double p_not_measured_ = 1;
-  for (int i = num_cells - 1; i >= 0; i--) {
-    unsigned int j = line[i];
-    update_local(p_free[j], ps_not_measured[j], width[i], l);
-    d1 = distance1(l, d1, p_not_measured_);
-    p_not_measured_ = p_not_measured(l, p_not_measured_);
-    distance1_[j] += d1;
-  }
+  return l.p_not_measured * hit(l) + l.miss_p * miss(l, exp);
 }
 
-void range_entropy::expected::distance2(
+void range_entropy::expected::line(
     const unsigned int * const line,
     const double * const p_free,
-    const double * const ps_not_measured,
+    const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
-    double * const distance2_) {
+    bool entropy,
+    unsigned int dimension,
+    double * const output) {
 
   local l;
+  expected exp;
 
-  double d1 = 0, d2 = 0;
-  double p_not_measured_ = 1;
+  // Set everything to zero
+  exp.information3 = 0;
+  exp.information2 = 0;
+  exp.information1 = 0;
+  exp.distance2 = 0;
+  exp.distance1 = 0;
+  exp.p_not_measured = 1;
+
+  // Iterate backwards over the cells in the line
   for (int i = num_cells - 1; i >= 0; i--) {
+
+    // Pre-compute
     unsigned int j = line[i];
-    update_local(p_free[j], ps_not_measured[j], width[i], l);
-    d2 = distance2(l, d1, d2, p_not_measured_);
-    d1 = distance1(l, d1, p_not_measured_);
-    p_not_measured_ = p_not_measured(l, p_not_measured_);
-    distance2_[j] += d2;
-  }
-}
+    update_local(p_free[j], p_not_measured[j], width[i], l);
 
-void range_entropy::expected::information1(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const ps_not_measured,
-    const double * const width,
-    unsigned int num_cells,
-    double * const information1_) {
+    // Update the expected entropy
+    if (entropy) {
+      switch (dimension) {
+        case 3:
+          exp.information3 = hit_or_miss(l, exp, information3_hit, information3_miss);
+        case 2:
+          exp.information2 = hit_or_miss(l, exp, information2_hit, information2_miss);
+        case 1:
+          exp.information1 = hit_or_miss(l, exp, information1_hit, information1_miss);
+      }
+    }
 
-  local l;
+    // Update the expected distance
+    switch (dimension) {
+      case 3:
+        exp.distance2 = hit_or_miss(l, exp, distance2_hit, distance2_miss);
+      case 2:
+        exp.distance1 = hit_or_miss(l, exp, distance1_hit, distance1_miss);
+    }
 
-  double i1 = 0;
-  double p_not_measured_ = 1;
-  for (int i = num_cells - 1; i >= 0; i--) {
-    unsigned int j = line[i];
-    update_local(p_free[j], ps_not_measured[j], width[i], l);
-    i1 = information1(l, i1, p_not_measured_);
-    p_not_measured_ = p_not_measured(l, p_not_measured_);
-    information1_[j] += i1;
-  }
-}
+    // Update the average p_not_measured
+    exp.p_not_measured = hit_or_miss(l, exp, p_not_measured_hit, p_not_measured_miss);
 
-void range_entropy::expected::information2(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const ps_not_measured,
-    const double * const width,
-    unsigned int num_cells,
-    double * const information2_) {
-
-  local l;
-
-  double d1 = 0, i1 = 0, i2 = 0;
-  double p_not_measured_ = 1;
-  for (int i = num_cells - 1; i >= 0; i--) {
-    unsigned int j = line[i];
-    update_local(p_free[j], ps_not_measured[j], width[i], l);
-    i2 = information2(l, d1, i1, i2, p_not_measured_);
-    i1 = information1(l, i1, p_not_measured_);
-    d1 = distance1(l, d1, p_not_measured_);
-    p_not_measured_ = p_not_measured(l, p_not_measured_);
-    information2_[j] += i2;
-  }
-}
-
-void range_entropy::expected::information3(
-    const unsigned int * const line,
-    const double * const p_free,
-    const double * const ps_not_measured,
-    const double * const width,
-    unsigned int num_cells,
-    double * const information3_) {
-
-  local l;
-
-  double d1 = 0, d2 = 0, i1 = 0, i2 = 0, i3 = 0;
-  double p_not_measured_ = 1;
-  for (int i = num_cells - 1; i >= 0; i--) {
-    unsigned int j = line[i];
-    update_local(p_free[j], ps_not_measured[j], width[i], l);
-    i3 = information3(l, d1, d2, i1, i2, i3, p_not_measured_);
-    i2 = information2(l, d1, i1, i2, p_not_measured_);
-    i1 = information1(l, i1, p_not_measured_);
-    d2 = distance2(l, d1, d2, p_not_measured_);
-    d1 = distance1(l, d1, p_not_measured_);
-    p_not_measured_ = p_not_measured(l, p_not_measured_);
-    information3_[j] += i3;
+    // Update the output
+    if (entropy) {
+      switch (dimension) {
+        case 3:
+          output[j] += exp.information3;
+          break;
+        case 2:
+          output[j] += exp.information2;
+          break;
+        case 1:
+          output[j] += exp.information1;
+          break;
+      }
+    } else {
+      switch (dimension) {
+        case 3:
+          output[j] += exp.distance2;
+          break;
+        case 2:
+          output[j] += exp.distance1;
+          break;
+      }
+    }
   }
 }
 

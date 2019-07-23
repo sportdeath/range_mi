@@ -129,20 +129,25 @@ int main() {
                       expected_information1(num_cells, 0),
                       expected_information2(num_cells, 0),
                       expected_information3(num_cells, 0);
-  expected::distance1(
+  expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      false, 2,
       expected_distance1.data());
-  expected::distance2(
+  expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      false, 3,
       expected_distance2.data());
-  expected::information1(
+  expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      true, 1,
       expected_information1.data());
-  expected::information2(
+  expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      true, 2,
       expected_information2.data());
-  expected::information3(
+  expected::line(
       line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      true, 3,
       expected_information3.data());
 
   std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << std::endl;
