@@ -9,37 +9,35 @@
 using namespace range_entropy;
 
 // Define constants
-double integration_step = 0.00001;
-double noise_dev = 0.0001;
-double noise_width = 10 * noise_dev;
+double integration_step = 0.0001;
+double noise_dev = 0.1;
+double noise_width = 3 * noise_dev;
 unsigned int num_cells = 100;
 
-double numerical_expected(
+void numerical_pdf(
     const unsigned int * const line,
     const double * const p_free,
     const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
-    double (*value)(double,double)) {
+    double * const pdf,
+    double * const p_not_measured_stepped,
+    unsigned int & pdf_size) {
 
   unsigned int i = 0;
   double r = 0;
   double width_sum = 0;
   double pdf_decay = 1;
-  double integral = 0;
+  pdf_size = 0;
   while (i < num_cells) {
     unsigned int j = line[i];
 
     // Compute the pdf
-    double pdf = 
+    p_not_measured_stepped[pdf_size] = p_not_measured[j];
+    pdf[pdf_size++] = 
       pdf_decay * (
           -std::pow(p_free[j], r - width_sum) *
           std::log(p_free[j]));
-
-    // Accumulate
-    integral +=
-      p_not_measured[j] * 
-      pdf * value(r, pdf) * integration_step;
 
     // Make a step
     r += integration_step;
@@ -50,6 +48,59 @@ double numerical_expected(
       width_sum += width[i];
       i++;
     }
+  }
+}
+
+double numerical_expected(
+    const double * const pdf,
+    const double * const p_not_measured_stepped,
+    unsigned pdf_size,
+    double (*value)(double,double)) {
+
+  double integral = 0;
+  for (unsigned int i = 0; i < pdf_size; i++) {
+    double r = i * integration_step;
+
+    // Accumulate
+    integral +=
+      p_not_measured_stepped[i] * 
+      pdf[i] * value(r, pdf[i]) * integration_step;
+  }
+
+  return integral;
+}
+
+double numerical_expected_noisy(
+    const double * const pdf,
+    unsigned pdf_size,
+    double * const convolve,
+    double (*value)(double,double)) {
+
+  // Clear the convolution
+  unsigned int convolve_size = pdf_size + (2 * noise_width)/integration_step + 1;
+  for (unsigned int i = 0; i < convolve_size; i++) {
+    convolve[i] = 0;
+  }
+
+  // Perform the convolution
+  for (unsigned int i = 0; i < pdf_size; i++) {
+    double r = i * integration_step;
+
+    for (double n = -noise_width; n < noise_width; n+=integration_step) {
+      unsigned int j = (r + n + noise_width)/integration_step;
+
+      double noise = 1/std::sqrt(2 * M_PI * noise_dev * noise_dev) * std::exp(-(n * n)/(2 * noise_dev * noise_dev));
+
+      convolve[j] += pdf[i] * noise * integration_step;
+    }
+  }
+  
+  // Perform the integration
+  double integral = 0;
+  for (unsigned int i = 0; i < convolve_size; i++) {
+    double z = i * integration_step - noise_width;
+    integral +=
+      convolve[i] * value(z, convolve[i]) * integration_step;
   }
 
   return integral;
@@ -70,37 +121,48 @@ void random_p(std::vector<double> & p) {
 int main() {
   // Initialize the inputs and outputs
   std::vector<double> p_free(num_cells);
-  std::vector<double> p_not_measured(num_cells, 1);
+  std::vector<double> p_not_measured(num_cells);
   std::vector<double> width(num_cells);
   // Randomize then
   random_p(p_free);
-  //random_p(p_not_measured);
+  random_p(p_not_measured);
   random_p(width);
 
   // Make a line
   std::vector<unsigned int> line(num_cells);
   std::iota(line.begin(), line.end(), 0);
 
+  // Compute the pdf
+  unsigned int pdf_size;
+  std::vector<double> pdf(num_cells/integration_step);
+  std::vector<double> p_not_measured_stepped(num_cells/integration_step);
+  std::vector<double> convolution((num_cells + 2 * noise_width)/integration_step);
+  numerical_pdf(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      pdf.data(), p_not_measured_stepped.data(), pdf_size);
+
+  std::cout << "Computing noiseless information numerically and recursively..." << std::endl;
+
   // Compute the values numerically
   double numerical_expected_distance1 =
     numerical_expected(
-        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        pdf.data(), p_not_measured_stepped.data(), pdf_size,
         range_entropy::expected::distance1);
   double numerical_expected_distance2 =
     numerical_expected(
-        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        pdf.data(), p_not_measured_stepped.data(), pdf_size,
         range_entropy::expected::distance2);
   double numerical_expected_information1 =
     numerical_expected(
-        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        pdf.data(), p_not_measured_stepped.data(), pdf_size,
         range_entropy::expected::information1);
   double numerical_expected_information2 =
     numerical_expected(
-        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        pdf.data(), p_not_measured_stepped.data(), pdf_size,
         range_entropy::expected::information2);
   double numerical_expected_information3 =
     numerical_expected(
-        line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+        pdf.data(), p_not_measured_stepped.data(), pdf_size,
         range_entropy::expected::information3);
 
   // Compute the values exactly
@@ -130,7 +192,38 @@ int main() {
       true, 3,
       expected_information3.data());
 
-  // Compute the values via noisy computation with noise set to zero.
+  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << std::endl;
+  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2[0] << std::endl;
+  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << std::endl;
+  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << std::endl;
+  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << std::endl;
+
+  std::cout << std::endl;
+  std::cout << "Computing noisy information numerically and recursively..." << std::endl;
+
+  // Compute the values numerically
+  double numerical_expected_noisy_distance1 =
+    numerical_expected_noisy(
+        pdf.data(), pdf_size, convolution.data(),
+        range_entropy::expected::distance1);
+  double numerical_expected_noisy_distance2 =
+    numerical_expected_noisy(
+        pdf.data(), pdf_size, convolution.data(),
+        range_entropy::expected::distance2);
+  double numerical_expected_noisy_information1 =
+    numerical_expected_noisy(
+        pdf.data(), pdf_size, convolution.data(),
+        range_entropy::expected::information1);
+  double numerical_expected_noisy_information2 =
+    numerical_expected_noisy(
+        pdf.data(), pdf_size, convolution.data(),
+        range_entropy::expected::information2);
+  double numerical_expected_noisy_information3 =
+    numerical_expected_noisy(
+        pdf.data(), pdf_size, convolution.data(),
+        range_entropy::expected::information3);
+
+  // Compute the values via noisy computation
   std::vector<double> expected_noisy_distance1(num_cells, 0),
                       expected_noisy_distance2(num_cells, 0),
                       expected_noisy_information1(num_cells, 0),
@@ -166,10 +259,10 @@ int main() {
       true, 3,
       pdfs, expected_noisy_information3.data());
 
-  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << ", " << expected_noisy_distance1[0] << std::endl;
-  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2[0] << ", " << expected_noisy_distance2[0] << std::endl;
-  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << ", " << expected_noisy_information1[0] << std::endl;
-  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << ", " << expected_noisy_information2[0] << std::endl;
-  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << ", " << expected_noisy_information3[0] << std::endl;
+  std::cout << "d1: " << numerical_expected_noisy_distance1 << ", " << expected_noisy_distance1[0] << std::endl;
+  std::cout << "d2: " << numerical_expected_noisy_distance2 << ", " << expected_noisy_distance2[0] << std::endl;
+  std::cout << "i1: " << numerical_expected_noisy_information1 << ", " << expected_noisy_information1[0] << std::endl;
+  std::cout << "i2: " << numerical_expected_noisy_information2 << ", " << expected_noisy_information2[0] << std::endl;
+  std::cout << "i3: " << numerical_expected_noisy_information3 << ", " << expected_noisy_information3[0] << std::endl;
 
 }
