@@ -5,6 +5,30 @@
 using namespace range_entropy;
 using namespace expected;
 
+double range_entropy::expected::p_not_measured(double r, double f) {
+  (void) f;
+  (void) r;
+  return 1;
+}
+double range_entropy::expected::distance1(double r, double f) {
+  (void) f;
+  return r;
+}
+double range_entropy::expected::distance2(double r, double f) {
+  (void) f;
+  return r*r;
+}
+double range_entropy::expected::information1(double r, double f) {
+  (void) r;
+  return -std::log(f);
+}
+double range_entropy::expected::information2(double r, double f) {
+  return -r*std::log(f);
+}
+double range_entropy::expected::information3(double r, double f) {
+  return -r*r*std::log(f);
+}
+
 void range_entropy::expected::update_local(
     double p_free,
     double p_not_measured,
@@ -160,7 +184,7 @@ void range_entropy::expected::line(
     const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
-    bool entropy,
+    bool information,
     unsigned int dimension,
     double * const output) {
 
@@ -182,8 +206,8 @@ void range_entropy::expected::line(
     unsigned int j = line[i];
     update_local(p_free[j], p_not_measured[j], width[i], l);
 
-    // Update the expected entropy
-    if (entropy) {
+    // Update the expected information
+    if (information) {
       switch (dimension) {
         case 3:
           exp.information3 = hit_or_miss(l, exp, information3_hit, information3_miss);
@@ -206,7 +230,7 @@ void range_entropy::expected::line(
     exp.p_not_measured = hit_or_miss(l, exp, p_not_measured_hit, p_not_measured_miss);
 
     // Update the output
-    if (entropy) {
+    if (information) {
       switch (dimension) {
         case 3:
           output[j] += exp.information3;

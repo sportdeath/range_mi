@@ -7,6 +7,18 @@
 namespace range_entropy {
 namespace expected {
 
+/**
+ * The functions this class aims to
+ * evaluate in expectation over range measurements
+ * r with probability density functions f.
+ */
+double p_not_measured(double r, double f);
+double distance1(double r, double f);
+double distance2(double r, double f);
+double information1(double r, double f);
+double information2(double r, double f);
+double information3(double r, double f);
+
 struct local {
   double width;
   double p_not_measured;

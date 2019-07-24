@@ -4,11 +4,14 @@
 #include <random>
 
 #include <range_entropy/expected.hpp>
+#include <range_entropy/expected_noisy.hpp>
 
 using namespace range_entropy;
 
 // Define constants
 double integration_step = 0.00001;
+double noise_dev = 0.0001;
+double noise_width = 10 * noise_dev;
 unsigned int num_cells = 100;
 
 double numerical_expected(
@@ -59,22 +62,6 @@ double numerical_expected(
   return integral;
 }
 
-double distance1(double r, double pdf) {
-  return r;
-}
-double distance2(double r, double pdf) {
-  return r * r;
-}
-double information1(double r, double pdf) {
-  return -std::log(pdf);
-}
-double information2(double r, double pdf) {
-  return -r * std::log(pdf);
-}
-double information3(double r, double pdf) {
-  return -r * r * std::log(pdf);
-}
-
 // Initialize random generator
 std::random_device random_device;
 std::mt19937 gen(random_device());
@@ -105,23 +92,23 @@ int main() {
   double numerical_expected_distance1 =
     numerical_expected(
         line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
-        distance1);
+        range_entropy::expected::distance1);
   double numerical_expected_distance2 =
     numerical_expected(
         line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
-        distance2);
+        range_entropy::expected::distance2);
   double numerical_expected_information1 =
     numerical_expected(
         line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
-        information1);
+        range_entropy::expected::information1);
   double numerical_expected_information2 =
     numerical_expected(
         line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
-        information2);
+        range_entropy::expected::information2);
   double numerical_expected_information3 =
     numerical_expected(
         line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
-        information3);
+        range_entropy::expected::information3);
 
   // Compute the values exactly
   std::vector<double> expected_distance1(num_cells, 0),
@@ -150,9 +137,49 @@ int main() {
       true, 3,
       expected_information3.data());
 
-  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << std::endl;
-  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2[0] << std::endl;
-  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << std::endl;
-  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << std::endl;
-  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << std::endl;
+  // Compute the values via noisy computation with noise set to zero.
+  std::vector<double> expected_noisy_distance1(num_cells, 0),
+                      expected_noisy_distance2(num_cells, 0),
+                      expected_noisy_information1(num_cells, 0),
+                      expected_noisy_information2(num_cells, 0),
+                      expected_noisy_information3(num_cells, 0);
+  std::vector<double> hit_pdf(num_cells/integration_step),
+                      hit_pdf_not_measured(num_cells/integration_step),
+                      miss_pdf(num_cells/integration_step),
+                      miss_pdf_not_measured(num_cells/integration_step);
+  double * pdfs[4] = {hit_pdf.data(),
+                      hit_pdf_not_measured.data(),
+                      miss_pdf.data(),
+                      miss_pdf_not_measured.data()};
+  expected_noisy::line(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      noise_dev, noise_width, integration_step,
+      false, 2,
+      pdfs, expected_noisy_distance1.data());
+  expected_noisy::line(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      noise_dev, noise_width, integration_step,
+      false, 3,
+      pdfs, expected_noisy_distance2.data());
+  expected_noisy::line(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      noise_dev, noise_width, integration_step,
+      true, 1,
+      pdfs, expected_noisy_information1.data());
+  expected_noisy::line(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      noise_dev, noise_width, integration_step,
+      true, 2,
+      pdfs, expected_noisy_information2.data());
+  expected_noisy::line(
+      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      noise_dev, noise_width, integration_step,
+      true, 3,
+      pdfs, expected_noisy_information3.data());
+
+  std::cout << "d1: " << numerical_expected_distance1 << ", " << expected_distance1[0] << ", " << expected_noisy_distance1[0] << std::endl;
+  std::cout << "d2: " << numerical_expected_distance2 << ", " << expected_distance2[0] << ", " << expected_noisy_distance2[0] << std::endl;
+  std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << ", " << expected_noisy_information1[0] << std::endl;
+  std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << ", " << expected_noisy_information2[0] << std::endl;
+  std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << ", " << expected_noisy_information3[0] << std::endl;
 }
