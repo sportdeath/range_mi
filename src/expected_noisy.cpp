@@ -1,6 +1,5 @@
 #include <cmath>
 #include <algorithm>
-#include <iostream>
 
 #include "range_entropy/expected.hpp"
 #include "range_entropy/expected_noisy.hpp"
@@ -67,14 +66,14 @@ void range_entropy::expected_noisy::pdf(
 
       // A box with blurred edges is the
       // difference between normal CDFs
-      double normal_scaling =
+      double normal_window =
         normal_cdf(r, normal_center, std_dev) -
         normal_cdf(r, normal_center + w, std_dev);
 
       // Put it all together
       double pdf_noiseless = std::pow(v, r) * neg_log_v;
 
-      double value = pdf_decay * pdf_noiseless * normal_scaling * normalization_constant;
+      double value = pdf_decay * pdf_noiseless * normal_window * normalization_constant;
       pdf[i] += value;
     }
 
