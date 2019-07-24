@@ -1,8 +1,18 @@
-entropy_topic: "/entropy"
-p_not_measured_topic: "/p_not_measured"
 map_topic: "/map"
-click_topic: "/clicked_point"
+entropy_topic: "/entropy"
+condition_topic: "/condition"
+reset_condition_topic: "/reset_condition"
 
-num_beams: 600
 spatial_jitter: 4
+num_beams: 600
 condition_steps: 10000
+noise_dev: 0
+noise_width: 8
+noise_step_size: 1.
+
+visualize: true
+visualize_more: true
+entropy_viz_topic: "/entropy_map"
+p_not_measured_viz_topic: "/p_not_measured"
+click_condition_topic: "/clicked_point"
+click_topic: "/clicked_point"

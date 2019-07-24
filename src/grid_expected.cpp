@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "range_entropy/expected.hpp"
+#include "range_entropy/expected_noisy.hpp"
 #include "range_entropy/grid_line.hpp"
 #include "range_entropy/grid_expected.hpp"
 
@@ -29,12 +30,11 @@ range_entropy::GridExpected::GridExpected(
 
 void range_entropy::GridExpected::compute_surface(
     const double * const p_free,
-    void f(const unsigned int * const,
-    const double * const,
-    const double * const,
-    const double * const,
-    unsigned int,
-    double * const)) {
+    bool information,
+    unsigned int dimension,
+    double noise_dev,
+    double noise_width,
+    double noise_step_size) {
 
   reset_surface();
 
@@ -45,19 +45,22 @@ void range_entropy::GridExpected::compute_surface(
     compute_surface_beam(
         spatial_interpolation,
         angular_interpolation,
-        p_free, f);
+        p_free, information,
+        dimension,
+        noise_dev,
+        noise_width,
+        noise_step_size);
 }
 
 void range_entropy::GridExpected::compute_surface_beam(
     double & spatial_interpolation,
     double & angular_interpolation,
     const double * const p_free,
-    void f(const unsigned int * const,
-    const double * const,
-    const double * const,
-    const double * const,
-    unsigned int,
-    double * const)) {
+    bool information,
+    unsigned int dimension,
+    double noise_dev,
+    double noise_width,
+    double noise_step_size) {
 
   // Convert the interpolation parameters to
   // x, y, theta
@@ -75,26 +78,51 @@ void range_entropy::GridExpected::compute_surface_beam(
       num_cells);
 
   // Accumulate value along the line
-  f(line.data(),
-    p_free,
-    p_not_measured_.data(),
-    widths.data(),
-    num_cells,
-    surface_.data());
+  if (noise_dev <= 0) {
+    // Use the noiseless version
+    range_entropy::expected::line(
+        line.data(),
+        p_free,
+        p_not_measured_.data(),
+        widths.data(),
+        num_cells,
+        information,
+        dimension,
+        surface_.data());
+  } else {
+    unsigned int noise_steps = 2 * (1 + noise_width)/noise_step_size;
+    std::vector<double> pdf_hit(noise_steps);
+    std::vector<double> pdf_miss(noise_steps);
+    double * pdfs[2] = {pdf_hit.data(), pdf_miss.data()};
+    range_entropy::expected_noisy::line(
+        line.data(),
+        p_free,
+        widths.data(),
+        num_cells,
+        noise_dev,
+        noise_width,
+        noise_step_size,
+        information,
+        dimension,
+        pdfs,
+        surface_.data());
+  }
 }
 
 void range_entropy::GridExpected::condition(
     double x,
     double y,
-    const double * const vacancy) {
+    const double * const vacancy,
+    unsigned int condition_steps,
+    unsigned int dimension) {
 
   // Clear the old p_measured
   std::fill(p_not_measured_single.begin(), p_not_measured_single.end(), 0);
 
   // Compute the new one for the given point
   double theta = 0;
-  double theta_step = 2 * M_PI /((double) 100 * grid_line.num_beams);
-  for (unsigned int i = 0; i < 100 * grid_line.num_beams; i++) {
+  double theta_step = 2 * M_PI /(double) condition_steps;
+  for (unsigned int i = 0; i < condition_steps; i++) {
     // Draw a line
     grid_line.draw(
         x, y, theta,
@@ -108,7 +136,7 @@ void range_entropy::GridExpected::condition(
         vacancy,
         widths.data(),
         num_cells,
-        2,
+        dimension,
         p_not_measured_single.data());
 
     theta += theta_step;

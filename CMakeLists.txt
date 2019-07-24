@@ -47,18 +47,39 @@ if (BUILD_TESTS)
 endif()
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
-  # Find catkin
+  # Find build dependencies
   find_package(catkin REQUIRED COMPONENTS
     roscpp
     nav_msgs
     geometry_msgs
+    message_generation
     )
+
+  # Add the messages
+  file(GLOB MSG_FILES msg/*.msg)
+  foreach(_file ${MSG_FILES})
+    get_filename_component(_name ${_file} NAME)
+    add_message_files(
+      FILES
+      ${_name}
+    )
+  endforeach()
+
+  # Generate messages
+  generate_messages(
+    DEPENDENCIES
+    std_msgs
+  )
+
+  # Define the package
   catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}
+    CATKIN_DEPENDS message_runtime
   )
 
-  # Build the nodes
+  # Add nodes
+  include_directories(node)
   add_subdirectory(node)
 
   # Install the library

@@ -34,28 +34,28 @@ public:
 
   void compute_surface(
       const double * const p_free,
-      void f(const unsigned int * const,
-      const double * const,
-      const double * const,
-      const double * const,
-      unsigned int,
-      double * const));
+      bool information,
+      unsigned int dimension,
+      double noise_dev=0,
+      double noise_width=0,
+      double noise_step_size=0);
 
   void compute_surface_beam(
       double & spatial_interpolation,
       double & angular_interpolation,
       const double * const p_free,
-      void f(const unsigned int * const,
-      const double * const,
-      const double * const,
-      const double * const,
-      unsigned int,
-      double * const));
+      bool information,
+      unsigned int dimension,
+      double noise_dev=0,
+      double noise_width=0,
+      double noise_step_size=0);
 
   void condition(
       double x,
       double y,
-      const double * const vacancy);
+      const double * const vacancy,
+      unsigned int condition_steps,
+      unsigned int dimension);
 
   void reset_surface() {
     std::fill(surface_.begin(), surface_.end(), 0);

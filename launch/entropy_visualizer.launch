@@ -7,4 +7,5 @@
   <node pkg="range_entropy" name="entropy_visualizer" type="entropy_visualizer" output="screen">
     <rosparam command="load" file="$(find range_entropy)/launch/params.yaml"/>
   </node>
+
 </launch>
