@@ -26,7 +26,6 @@ double numerical_expected(
   double r = 0;
   double width_sum = 0;
   double pdf_decay = 1;
-  double cdf = 0;
   double integral = 0;
   while (i < num_cells) {
     unsigned int j = line[i];
@@ -42,9 +41,6 @@ double numerical_expected(
       p_not_measured[j] * 
       pdf * value(r, pdf) * integration_step;
 
-    // Integrate the cdf
-    cdf += pdf * integration_step;
-
     // Make a step
     r += integration_step;
     if (r - width_sum > width[i]) {
@@ -55,9 +51,6 @@ double numerical_expected(
       i++;
     }
   }
-
-  // Ignore probability of miss
-  // because it is very low
 
   return integral;
 }
@@ -77,11 +70,11 @@ void random_p(std::vector<double> & p) {
 int main() {
   // Initialize the inputs and outputs
   std::vector<double> p_free(num_cells);
-  std::vector<double> p_not_measured(num_cells);
+  std::vector<double> p_not_measured(num_cells, 1);
   std::vector<double> width(num_cells);
   // Randomize then
   random_p(p_free);
-  random_p(p_not_measured);
+  //random_p(p_not_measured);
   random_p(width);
 
   // Make a line
@@ -144,35 +137,31 @@ int main() {
                       expected_noisy_information2(num_cells, 0),
                       expected_noisy_information3(num_cells, 0);
   std::vector<double> hit_pdf(num_cells/integration_step),
-                      hit_pdf_not_measured(num_cells/integration_step),
-                      miss_pdf(num_cells/integration_step),
-                      miss_pdf_not_measured(num_cells/integration_step);
+                      miss_pdf(num_cells/integration_step);
   double * pdfs[4] = {hit_pdf.data(),
-                      hit_pdf_not_measured.data(),
-                      miss_pdf.data(),
-                      miss_pdf_not_measured.data()};
+                      miss_pdf.data()};
   expected_noisy::line(
-      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       false, 2,
       pdfs, expected_noisy_distance1.data());
   expected_noisy::line(
-      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       false, 3,
       pdfs, expected_noisy_distance2.data());
   expected_noisy::line(
-      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 1,
       pdfs, expected_noisy_information1.data());
   expected_noisy::line(
-      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 2,
       pdfs, expected_noisy_information2.data());
   expected_noisy::line(
-      line.data(), p_free.data(), p_not_measured.data(), width.data(), num_cells,
+      line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 3,
       pdfs, expected_noisy_information3.data());
@@ -182,4 +171,5 @@ int main() {
   std::cout << "i1: " << numerical_expected_information1 << ", " << expected_information1[0] << ", " << expected_noisy_information1[0] << std::endl;
   std::cout << "i2: " << numerical_expected_information2 << ", " << expected_information2[0] << ", " << expected_noisy_information2[0] << std::endl;
   std::cout << "i3: " << numerical_expected_information3 << ", " << expected_information3[0] << ", " << expected_noisy_information3[0] << std::endl;
+
 }

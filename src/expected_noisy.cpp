@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #include "range_entropy/expected.hpp"
 #include "range_entropy/expected_noisy.hpp"
@@ -14,7 +15,6 @@ double range_entropy::expected_noisy::normal_cdf(
 void range_entropy::expected_noisy::pdf(
     const unsigned int * const line,
     const double * const vacancy,
-    const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
     double std_dev,
@@ -22,7 +22,6 @@ void range_entropy::expected_noisy::pdf(
     double step_size,
     double pdf_width,
     double * const pdf,
-    double * const pdf_not_measured,
     unsigned int & pdf_size) {
 
   // Zero the probability density function. 
@@ -74,9 +73,9 @@ void range_entropy::expected_noisy::pdf(
 
       // Put it all together
       double pdf_noiseless = std::pow(v, r) * neg_log_v;
-      pdf[i] +=
-        pdf_decay * pdf_noiseless *
-        normal_scaling * normalization_constant;
+
+      double value = pdf_decay * pdf_noiseless * normal_scaling * normalization_constant;
+      pdf[i] += value;
     }
 
     // Update width and decay
@@ -87,7 +86,6 @@ void range_entropy::expected_noisy::pdf(
 
 double range_entropy::expected_noisy::hit(
     const double * const pdf,
-    const double * const pdf_not_measured,
     unsigned int pdf_size,
     double step_size,
     double noise_width,
@@ -96,7 +94,7 @@ double range_entropy::expected_noisy::hit(
   double integral = 0;
   for (unsigned int i = 0; i < pdf_size; i++) {
     double r = step_size * i - noise_width;
-    integral += step_size * pdf_not_measured[i] * value(r, pdf[i]);
+    integral += step_size * pdf[i] * value(r, pdf[i]);
   }
 
   return integral;
@@ -105,7 +103,6 @@ double range_entropy::expected_noisy::hit(
 double range_entropy::expected_noisy::miss(
     const range_entropy::expected::local & l,
     const double * const pdf,
-    const double * const pdf_not_measured,
     unsigned int pdf_size,
     double step_size,
     double noise_width,
@@ -114,7 +111,7 @@ double range_entropy::expected_noisy::miss(
   double integral = 0;
   for (unsigned int i = 0; i < pdf_size; i++) {
     double r = step_size * i - noise_width + l.width;
-    integral += step_size * pdf_not_measured[i] * value(r, pdf[i] * l.miss_p);
+    integral += step_size * pdf[i] * value(r, pdf[i] * l.miss_p);
   }
 
   return integral;
@@ -135,7 +132,6 @@ double range_entropy::expected_noisy::hit_or_miss(
 void range_entropy::expected_noisy::line(
     const unsigned int * const line,
     const double * const vacancy,
-    const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
     double noise_std_dev,
@@ -158,16 +154,14 @@ void range_entropy::expected_noisy::line(
   exp.p_not_measured = 1;
 
   double * const hit_pdf = pdfs[0];
-  double * const hit_pdf_not_measured = pdfs[1];
-  double * const miss_pdf = pdfs[2];
-  double * const miss_pdf_not_measured = pdfs[3];
+  double * const miss_pdf = pdfs[1];
 
   // Iterate backwards over the cells in the line
   for (int i = num_cells - 1; i >= 0; i--) {
 
     // Pre-compute
     unsigned int j = line[i];
-    update_local(vacancy[j], p_not_measured[j], width[i], l);
+    update_local(vacancy[j], 1, width[i], l);
 
     // Compute the PDF along
     // [-noise_width, width[i] + noise_width]
@@ -175,7 +169,6 @@ void range_entropy::expected_noisy::line(
     range_entropy::expected_noisy::pdf(
         line + i,
         vacancy,
-        p_not_measured,
         width + i,
         num_cells - i,
         noise_std_dev,
@@ -183,7 +176,6 @@ void range_entropy::expected_noisy::line(
         step_size,
         width[i],
         hit_pdf,
-        hit_pdf_not_measured,
         hit_pdf_size);
     // Compute the PDF along
     // [-noise_width, noise_width]
@@ -192,7 +184,6 @@ void range_entropy::expected_noisy::line(
     range_entropy::expected_noisy::pdf(
         line + i + 1,
         vacancy,
-        p_not_measured,
         width + i + 1,
         num_cells - i - 1,
         noise_std_dev,
@@ -200,7 +191,6 @@ void range_entropy::expected_noisy::line(
         step_size,
         0,
         miss_pdf,
-        miss_pdf_not_measured,
         miss_pdf_size);
 
     double hit_integral, miss_integral;
@@ -209,23 +199,25 @@ void range_entropy::expected_noisy::line(
     if (information) {
       switch (dimension) {
         case 3:
-          hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
               range_entropy::expected::information3);
-          miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
               range_entropy::expected::information3);
           exp.information3 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information3_miss);
+          [[fallthrough]];
         case 2:
-          hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
               range_entropy::expected::information2);
-          miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
               range_entropy::expected::information2);
           exp.information2 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information2_miss);
+          [[fallthrough]];
         case 1:
-          hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
               range_entropy::expected::information1);
-          miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
               range_entropy::expected::information1);
           exp.information1 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information1_miss);
@@ -235,28 +227,21 @@ void range_entropy::expected_noisy::line(
     // Update the expected distance
     switch (dimension) {
       case 3:
-        hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
+        hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
             range_entropy::expected::distance2);
-        miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
+        miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
             range_entropy::expected::distance2);
         exp.distance2 = hit_or_miss(l, exp, hit_integral, miss_integral,
             range_entropy::expected::distance2_miss);
+        [[fallthrough]];
       case 2:
-        hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
+        hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
             range_entropy::expected::distance1);
-        miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
+        miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
             range_entropy::expected::distance1);
         exp.distance1 = hit_or_miss(l, exp, hit_integral, miss_integral,
             range_entropy::expected::distance1_miss);
     }
-
-    // Update the average p_not_measured
-    hit_integral = hit(hit_pdf, hit_pdf_not_measured, hit_pdf_size, step_size, noise_width,
-        range_entropy::expected::p_not_measured);
-    miss_integral = miss(l, miss_pdf, miss_pdf_not_measured, miss_pdf_size, step_size, noise_width,
-        range_entropy::expected::p_not_measured);
-    exp.p_not_measured = hit_or_miss(l, exp, hit_integral, miss_integral,
-        range_entropy::expected::p_not_measured_miss);
 
     // Update the output
     if (information) {

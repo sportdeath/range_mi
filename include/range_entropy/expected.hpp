@@ -15,6 +15,7 @@ namespace expected {
 double p_not_measured(double r, double f);
 double distance1(double r, double f);
 double distance2(double r, double f);
+double neg_log(double f);
 double information1(double r, double f);
 double information2(double r, double f);
 double information3(double r, double f);

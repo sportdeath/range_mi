@@ -18,15 +18,22 @@ double range_entropy::expected::distance2(double r, double f) {
   (void) f;
   return r*r;
 }
+double range_entropy::expected::neg_log(double f) {
+  if (f <= 0) {
+    return 999999;
+  } else {
+    return -std::log(f);
+  }
+}
 double range_entropy::expected::information1(double r, double f) {
   (void) r;
-  return -std::log(f);
+  return neg_log(f);
 }
 double range_entropy::expected::information2(double r, double f) {
-  return -r*std::log(f);
+  return r * neg_log(f);
 }
 double range_entropy::expected::information3(double r, double f) {
-  return -r*r*std::log(f);
+  return r * r * neg_log(f);
 }
 
 void range_entropy::expected::update_local(
@@ -211,8 +218,10 @@ void range_entropy::expected::line(
       switch (dimension) {
         case 3:
           exp.information3 = hit_or_miss(l, exp, information3_hit, information3_miss);
+          [[fallthrough]];
         case 2:
           exp.information2 = hit_or_miss(l, exp, information2_hit, information2_miss);
+          [[fallthrough]];
         case 1:
           exp.information1 = hit_or_miss(l, exp, information1_hit, information1_miss);
       }
@@ -222,6 +231,7 @@ void range_entropy::expected::line(
     switch (dimension) {
       case 3:
         exp.distance2 = hit_or_miss(l, exp, distance2_hit, distance2_miss);
+        [[fallthrough]];
       case 2:
         exp.distance1 = hit_or_miss(l, exp, distance1_hit, distance1_miss);
     }

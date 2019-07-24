@@ -31,7 +31,6 @@ double normal_cdf(
 void pdf(
     const unsigned int * const line,
     const double * const vacancy,
-    const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
     double noise_dev,
@@ -39,7 +38,6 @@ void pdf(
     double step_size,
     double pdf_width,
     double * const pdf,
-    double * const pdf_not_measured,
     unsigned int & pdf_size);
 
 /**
@@ -48,7 +46,6 @@ void pdf(
  */
 double hit(
     const double * const pdf,
-    const double * const pdf_not_measured,
     unsigned int pdf_size,
     double step_size,
     double noise_width,
@@ -56,7 +53,6 @@ double hit(
 double miss(
     const range_entropy::expected::local & l,
     const double * const pdf,
-    const double * const pdf_not_measured,
     unsigned int pdf_size,
     double step_size,
     double noise_width,
@@ -78,7 +74,6 @@ double hit_or_miss(
 void line(
     const unsigned int * const line,
     const double * const p_free,
-    const double * const p_not_measured,
     const double * const width,
     unsigned int num_cells,
     double noise_dev,
