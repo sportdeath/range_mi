@@ -9,7 +9,7 @@
 using namespace range_entropy;
 
 // Define constants
-double integration_step = 0.01;
+double integration_step = 0.0001;
 double noise_dev = 2;
 double noise_width = 4 * noise_dev;
 unsigned int num_cells = 100;
