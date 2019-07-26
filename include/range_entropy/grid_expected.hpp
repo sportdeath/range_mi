@@ -29,7 +29,6 @@ public:
   GridExpected(
       unsigned int height,
       unsigned int width,
-      unsigned int spatial_jitter,
       unsigned int num_beams);
 
   void compute_surface(

@@ -10,7 +10,6 @@ using namespace range_entropy;
 range_entropy::GridExpected::GridExpected(
     unsigned int height,
     unsigned int width,
-    unsigned int spatial_jitter,
 		unsigned int num_beams) {
 
   // Set the expected value to zero
@@ -20,7 +19,7 @@ range_entropy::GridExpected::GridExpected(
   p_not_measured_ = std::vector<double>(height * width, 1);
 
   // Initialize the beam sampler
-  grid_line = GridLine(height, width, spatial_jitter, num_beams);
+  grid_line = GridLine(height, width, num_beams);
 
   // Initialize the storage vectors
   line = std::vector<unsigned int>(grid_line.size());

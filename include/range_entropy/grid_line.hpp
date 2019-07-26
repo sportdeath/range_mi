@@ -11,9 +11,9 @@ class GridLine {
     GridLine() {}
 
     GridLine(unsigned int height_, unsigned int width_,
-        unsigned int spatial_jitter_, unsigned int num_beams_)
+        unsigned int num_beams_)
       : height(height_), width(width_),
-        spatial_jitter(spatial_jitter_), num_beams(num_beams_)
+        num_beams(num_beams_)
     {}
 
     void draw(
@@ -36,7 +36,7 @@ class GridLine {
     }
 
     unsigned int height, width;
-    unsigned int spatial_jitter, num_beams;
+    unsigned int num_beams;
 };
 
 }

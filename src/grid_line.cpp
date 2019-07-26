@@ -95,7 +95,7 @@ void range_entropy::GridLine::sample(
   // Compute the number of steps that must be made
   double steps = (normalized_width + normalized_height)/(c_abs + s_abs);
   // Use it to update the interpolation
-  spatial_interpolation += 1./(spatial_jitter * steps);
+  spatial_interpolation += 1./steps;
   // Update if necessary
   if (spatial_interpolation >= 1) {
     spatial_interpolation = 0;

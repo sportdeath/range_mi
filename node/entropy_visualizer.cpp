@@ -21,7 +21,6 @@ class EntropyVisualizer {
       n.getParam("condition_topic", condition_topic);
       n.getParam("reset_condition_topic", reset_condition_topic);
       // Ray tracing parameters
-      n.getParam("spatial_jitter", spatial_jitter);
       n.getParam("num_beams", num_beams);
       n.getParam("condition_steps", condition_steps);
       // Noise parameters
@@ -67,7 +66,6 @@ class EntropyVisualizer {
       grid_caster = range_entropy::GridExpected(
           map_info.height,
           map_info.width,
-          spatial_jitter,
           num_beams);
 
       compute_entropy();
@@ -159,7 +157,7 @@ class EntropyVisualizer {
       p_not_measured_pub;
 
     // Parameters
-    int spatial_jitter, num_beams;
+    int num_beams;
     int condition_steps;
     bool visualize, visualize_more;
     double noise_dev, noise_width, noise_step_size;

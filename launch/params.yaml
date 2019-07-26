@@ -3,11 +3,10 @@ entropy_topic: "/entropy"
 condition_topic: "/condition"
 reset_condition_topic: "/reset_condition"
 
-spatial_jitter: 4
-num_beams: 600
-condition_steps: 10000
+num_beams: 300
+condition_steps: 50000
 noise_dev: 0
-noise_width: 8
+noise_width: 40
 noise_step_size: 1.
 
 visualize: true
