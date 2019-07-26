@@ -56,6 +56,9 @@ void range_entropy::expected::update_local(
   l.width = width;
   l.p_not_measured = p_not_measured;
 
+  // Compute once
+  double log_p_free = std::log(p_free);
+
   // The probability that the range measurement
   // does not hit any occupied state within the
   // width.
@@ -66,7 +69,7 @@ void range_entropy::expected::update_local(
   //
   // Note that f(r) = -p^r log(p)
   // 
-  l.miss_p = std::pow(p_free, width);
+  l.miss_p = std::exp(log_p_free * width);
 
   // The converse of p_miss
   l.hit_p = 1 - l.miss_p;
@@ -76,7 +79,7 @@ void range_entropy::expected::update_local(
   //
   // -log(p_miss) = -w log p
   // 
-  l.miss_info = - width * std::log(p_free);
+  l.miss_info = -width * log_p_free;
 
   // The inverse of the information
   // precomputed for optimization
@@ -90,7 +93,7 @@ void range_entropy::expected::update_local(
   // w->0                 0
   //
   //        = -log(-log(p))
-  l.zero_info = -std::log(-std::log(p_free));
+  l.zero_info = -std::log(-log_p_free);
 }
 
 double range_entropy::expected::p_not_measured_hit(
