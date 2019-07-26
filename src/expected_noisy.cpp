@@ -1,14 +1,15 @@
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #include "range_entropy/expected.hpp"
 #include "range_entropy/expected_noisy.hpp"
 
-double range_entropy::expected_noisy::normal_cdf(
+double range_entropy::expected_noisy::normal_pdf(
     double x,
-    double mean,
-    double std_dev) {
-  return 0.5 * (1 + std::erf((x - mean)/(std_dev * std::sqrt(2))));
+    double dev) {
+  double x_scaled = x/dev;
+  return 1./(std::sqrt(2 * M_PI) * dev) * std::exp(-(x_scaled * x_scaled)/2.);
 }
 
 void range_entropy::expected_noisy::pdf(
@@ -16,68 +17,68 @@ void range_entropy::expected_noisy::pdf(
     const double * const vacancy,
     const double * const width,
     unsigned int num_cells,
-    double std_dev,
-    double truncation_width,
-    double step_size,
+    const double * const noise,
+    unsigned int noise_size,
+    double integration_step,
     double pdf_width,
     double * const pdf,
     unsigned int & pdf_size) {
 
-  // Zero the probability density function. 
-  pdf_size = 0;
-  for (
-      double r = -truncation_width;
-      r < pdf_width + truncation_width;
-      r+= step_size) {
-    pdf[pdf_size++] = 0;
-  }
-
-  double variance = std_dev * std_dev;
+  double noise_width = integration_step * noise_size;
+  double noise_half_width = noise_width/2.;
 
   double pdf_decay = 1;
   double width_sum = 0;
+  double r = 0;
+  unsigned int r_index = 0;
+  pdf_size = 0;
 
   // Iterate over the cells
   for (unsigned int line_cell = 0; line_cell < num_cells; line_cell++) {
-    // Stop computing when the density function
-    // of a cell no longer overlaps with
-    // [-truncation_width, width[0] + truncation_width]
-    if (width_sum > pdf_width + 2 * truncation_width) break;
+    // If the width is too large the cells are of no use
+    if (width_sum > pdf_width + noise_width) break;
 
-    // Pre-compute
+    // Fetch vacancy and width
     unsigned int cell = line[line_cell];
     double v = vacancy[cell];
     double w = width[line_cell];
     double neg_log_v = -std::log(v);
 
-    // The center of the normal
-    // distribution is ahead of zero
-    double normal_center = variance * neg_log_v;
+    // Until we hit the end of the cell
+    while (r < width_sum + w) {
 
-    double normalization_constant =
-      std::exp(0.5 * variance * neg_log_v * neg_log_v);
+      // Compute the value of the PDF
+      double pdf_value = pdf_decay * std::pow(v, r) * neg_log_v;
 
-    unsigned int i_min = std::floor(width_sum/step_size);
-    unsigned int i_max = std::ceil((width_sum + w + 2 * truncation_width)/step_size);
-    for (unsigned int i = i_min; i < std::min(i_max, pdf_size); i++) {
+      // And convolve with a normal distribution
+      double n = -noise_half_width;
+      for (unsigned int n_index = 0; n_index < noise_size; n_index++) {
+        // This is the convolved position
+        double z = r + n;
 
-      // Convert to a range measurement
-      double r = i * step_size - width_sum - truncation_width;
+        // Don't compute past necessary
+        if (z > pdf_width + noise_half_width) break;
 
-      // A box with blurred edges is the
-      // difference between normal CDFs
-      double normal_window =
-        normal_cdf(r, normal_center, std_dev) -
-        normal_cdf(r, normal_center + w, std_dev);
+        // If this is the first time we're visiting
+        // the cell, clear it.
+        if (r_index + n_index >= pdf_size) {
+          pdf[r_index + n_index] = 0;
+          pdf_size++;
+        }
 
-      // Put it all together
-      double pdf_noiseless = std::pow(v, r) * neg_log_v;
+        // Accumulated to convolute
+        pdf[r_index + n_index] += integration_step * noise[n_index] * pdf_value;
 
-      double value = pdf_decay * pdf_noiseless * normal_window * normalization_constant;
-      pdf[i] += value;
+        // Make a step
+        n += integration_step;
+      }
+
+      // Make a step
+      r += integration_step;
+      r_index++;
     }
 
-    // Update width and decay
+    // Move to the next cell
     width_sum += w;
     pdf_decay *= std::pow(v, w);
   }
@@ -86,14 +87,15 @@ void range_entropy::expected_noisy::pdf(
 double range_entropy::expected_noisy::hit(
     const double * const pdf,
     unsigned int pdf_size,
-    double step_size,
-    double noise_width,
+    unsigned int noise_size,
+    double integration_step,
     double (*value)(double, double)) {
 
   double integral = 0;
+  double r = -(integration_step * noise_size)/2.;
   for (unsigned int i = 0; i < pdf_size; i++) {
-    double r = step_size * i - noise_width;
-    integral += step_size * pdf[i] * value(r, pdf[i]);
+    integral += integration_step * pdf[i] * value(r, pdf[i]);
+    r += integration_step;
   }
 
   return integral;
@@ -103,14 +105,15 @@ double range_entropy::expected_noisy::miss(
     const range_entropy::expected::local & l,
     const double * const pdf,
     unsigned int pdf_size,
-    double step_size,
-    double noise_width,
+    unsigned int noise_size,
+    double integration_step,
     double (*value)(double, double)) {
 
   double integral = 0;
+  double r = -(integration_step * noise_size)/2. + l.width;
   for (unsigned int i = 0; i < pdf_size; i++) {
-    double r = step_size * i - noise_width + l.width;
-    integral += step_size * pdf[i] * value(r, pdf[i] * l.miss_p);
+    integral += integration_step * pdf[i] * value(r, pdf[i] * l.miss_p);
+    r += integration_step;
   }
 
   return integral;
@@ -133,12 +136,13 @@ void range_entropy::expected_noisy::line(
     const double * const vacancy,
     const double * const width,
     unsigned int num_cells,
-    double noise_std_dev,
-    double noise_width,
-    double step_size,
+    const double * const noise,
+    unsigned int noise_size,
+    double integration_step,
     bool information,
     unsigned int dimension,
-    double * const * const pdfs,
+    double * const hit_pdf,
+    double * const miss_pdf,
     double * const output) {
 
   range_entropy::expected::local l;
@@ -151,9 +155,6 @@ void range_entropy::expected_noisy::line(
   exp.distance2 = 0;
   exp.distance1 = 0;
   exp.p_not_measured = 1;
-
-  double * const hit_pdf = pdfs[0];
-  double * const miss_pdf = pdfs[1];
 
   // Iterate backwards over the cells in the line
   for (int i = num_cells - 1; i >= 0; i--) {
@@ -170,9 +171,9 @@ void range_entropy::expected_noisy::line(
         vacancy,
         width + i,
         num_cells - i,
-        noise_std_dev,
-        noise_width,
-        step_size,
+        noise,
+        noise_size,
+        integration_step,
         width[i],
         hit_pdf,
         hit_pdf_size);
@@ -185,9 +186,9 @@ void range_entropy::expected_noisy::line(
         vacancy,
         width + i + 1,
         num_cells - i - 1,
-        noise_std_dev,
-        noise_width,
-        step_size,
+        noise,
+        noise_size,
+        integration_step,
         0,
         miss_pdf,
         miss_pdf_size);
@@ -198,25 +199,25 @@ void range_entropy::expected_noisy::line(
     if (information) {
       switch (dimension) {
         case 3:
-          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, noise_size, integration_step,
               range_entropy::expected::information3);
-          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, noise_size, integration_step,
               range_entropy::expected::information3);
           exp.information3 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information3_miss);
           [[fallthrough]];
         case 2:
-          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, noise_size, integration_step,
               range_entropy::expected::information2);
-          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, noise_size, integration_step,
               range_entropy::expected::information2);
           exp.information2 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information2_miss);
           [[fallthrough]];
         case 1:
-          hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
+          hit_integral = hit(hit_pdf, hit_pdf_size, noise_size, integration_step,
               range_entropy::expected::information1);
-          miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
+          miss_integral = miss(l, miss_pdf, miss_pdf_size, noise_size, integration_step,
               range_entropy::expected::information1);
           exp.information1 = hit_or_miss(l, exp, hit_integral, miss_integral,
               range_entropy::expected::information1_miss);
@@ -226,17 +227,17 @@ void range_entropy::expected_noisy::line(
     // Update the expected distance
     switch (dimension) {
       case 3:
-        hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
+        hit_integral = hit(hit_pdf, hit_pdf_size, noise_size, integration_step,
             range_entropy::expected::distance2);
-        miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
+        miss_integral = miss(l, miss_pdf, miss_pdf_size, noise_size, integration_step,
             range_entropy::expected::distance2);
         exp.distance2 = hit_or_miss(l, exp, hit_integral, miss_integral,
             range_entropy::expected::distance2_miss);
         [[fallthrough]];
       case 2:
-        hit_integral = hit(hit_pdf, hit_pdf_size, step_size, noise_width,
+        hit_integral = hit(hit_pdf, hit_pdf_size, noise_size, integration_step,
             range_entropy::expected::distance1);
-        miss_integral = miss(l, miss_pdf, miss_pdf_size, step_size, noise_width,
+        miss_integral = miss(l, miss_pdf, miss_pdf_size, noise_size, integration_step,
             range_entropy::expected::distance1);
         exp.distance1 = hit_or_miss(l, exp, hit_integral, miss_integral,
             range_entropy::expected::distance1_miss);

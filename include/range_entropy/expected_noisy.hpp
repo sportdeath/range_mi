@@ -5,14 +5,7 @@
 namespace range_entropy {
 namespace expected_noisy {
 
-/**
- * The cumulative distribution function
- * of a normal distribution.
- */
-double normal_cdf(
-    double x,
-    double mean,
-    double std_dev);
+double normal_pdf(double x, double dev);
 
 /**
  * Calculate the probability density of a range
@@ -33,9 +26,9 @@ void pdf(
     const double * const vacancy,
     const double * const width,
     unsigned int num_cells,
-    double noise_dev,
-    double noise_width,
-    double step_size,
+    const double * const noise,
+    unsigned int noise_size,
+    double integration_step,
     double pdf_width,
     double * const pdf,
     unsigned int & pdf_size);
@@ -47,15 +40,15 @@ void pdf(
 double hit(
     const double * const pdf,
     unsigned int pdf_size,
-    double step_size,
-    double noise_width,
+    unsigned int noise_size,
+    double integration_step,
     double (*value)(double, double));
 double miss(
     const range_entropy::expected::local & l,
     const double * const pdf,
     unsigned int pdf_size,
-    double step_size,
-    double noise_width,
+    unsigned int noise_size,
+    double integration_step,
     double (*value)(double, double));
 
 /**
@@ -73,15 +66,16 @@ double hit_or_miss(
 
 void line(
     const unsigned int * const line,
-    const double * const p_free,
+    const double * const vacancy,
     const double * const width,
     unsigned int num_cells,
-    double noise_dev,
-    double noise_width,
-    double step_size,
-    bool entropy,
+    const double * const noise,
+    unsigned int noise_size,
+    double integration_step,
+    bool information,
     unsigned int dimension,
-    double * const * const pdfs,
+    double * const hit_pdf,
+    double * const miss_pdf,
     double * const output);
 
 }}
