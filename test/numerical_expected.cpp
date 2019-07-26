@@ -9,7 +9,7 @@
 using namespace range_entropy;
 
 // Define constants
-double integration_step = 0.005;
+double integration_step = 0.01;
 double noise_dev = 2;
 double noise_width = 4 * noise_dev;
 unsigned int num_cells = 100;
@@ -231,33 +231,36 @@ int main() {
                       expected_noisy_information3(num_cells, 0);
   std::vector<double> hit_pdf(num_cells/integration_step),
                       miss_pdf(num_cells/integration_step);
-  double * pdfs[4] = {hit_pdf.data(),
-                      miss_pdf.data()};
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       false, 2,
-      pdfs, expected_noisy_distance1.data());
+      hit_pdf.data(), miss_pdf.data(),
+      expected_noisy_distance1.data());
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       false, 3,
-      pdfs, expected_noisy_distance2.data());
+      hit_pdf.data(), miss_pdf.data(),
+      expected_noisy_distance2.data());
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 1,
-      pdfs, expected_noisy_information1.data());
+      hit_pdf.data(), miss_pdf.data(),
+      expected_noisy_information1.data());
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 2,
-      pdfs, expected_noisy_information2.data());
+      hit_pdf.data(), miss_pdf.data(),
+      expected_noisy_information2.data());
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,
       true, 3,
-      pdfs, expected_noisy_information3.data());
+      hit_pdf.data(), miss_pdf.data(),
+      expected_noisy_information3.data());
 
   std::cout << "d1: " << numerical_expected_noisy_distance1 << ", " << expected_noisy_distance1[0] << std::endl;
   std::cout << "d2: " << numerical_expected_noisy_distance2 << ", " << expected_noisy_distance2[0] << std::endl;

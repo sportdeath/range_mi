@@ -16,35 +16,24 @@ void range_entropy::expected_noisy::pdf(
     const double * const vacancy,
     const double * const width,
     unsigned int num_cells,
-    double std_dev,
-    double truncation_width,
-    double step_size,
+    double noise_dev,
+    double noise_half_width,
+    double integration_step,
     double pdf_width,
     double * const pdf,
     unsigned int & pdf_size) {
 
-  // Zero the probability density function. 
-  pdf_size = 0;
-  for (
-      double r = -truncation_width;
-      r < pdf_width + truncation_width;
-      r+= step_size) {
-    pdf[pdf_size++] = 0;
-  }
-
-  double variance = std_dev * std_dev;
+  double variance = noise_dev * noise_dev;
 
   double pdf_decay = 1;
   double width_sum = 0;
+  pdf_size = 0;
 
   // Iterate over the cells
   for (unsigned int line_cell = 0; line_cell < num_cells; line_cell++) {
-    // Stop computing when the density function
-    // of a cell no longer overlaps with
-    // [-truncation_width, width[0] + truncation_width]
-    if (width_sum > pdf_width + 2 * truncation_width) break;
+    // If the width is too large the cells are of no use
+    if (width_sum > pdf_width + 2 * noise_half_width) break;
 
-    // Pre-compute
     unsigned int cell = line[line_cell];
     double v = vacancy[cell];
     double w = width[line_cell];
@@ -57,24 +46,34 @@ void range_entropy::expected_noisy::pdf(
     double normalization_constant =
       std::exp(0.5 * variance * neg_log_v * neg_log_v);
 
-    unsigned int i_min = std::floor(width_sum/step_size);
-    unsigned int i_max = std::ceil((width_sum + w + 2 * truncation_width)/step_size);
-    for (unsigned int i = i_min; i < std::min(i_max, pdf_size); i++) {
+    // Until we hit the end of the cell (plus noise)
+    double z = -noise_half_width;
+    unsigned int z_index = width_sum/integration_step;
+    while (z < w + noise_half_width and z + width_sum < pdf_width + noise_half_width) {
 
-      // Convert to a range measurement
-      double r = i * step_size - width_sum - truncation_width;
+      // Compute the value of the PDF
+      double noiseless_value = pdf_decay * std::pow(v, z) * neg_log_v;
 
-      // A box with blurred edges is the
-      // difference between normal CDFs
+      // The CDF
       double normal_window =
-        normal_cdf(r, normal_center, std_dev) -
-        normal_cdf(r, normal_center + w, std_dev);
+        normal_cdf(z, normal_center, noise_dev) -
+        normal_cdf(z, normal_center + w, noise_dev);
 
-      // Put it all together
-      double pdf_noiseless = std::pow(v, r) * neg_log_v;
+      // Compute the full value
+      double value = normalization_constant * normal_window * noiseless_value;
 
-      double value = pdf_decay * pdf_noiseless * normal_window * normalization_constant;
-      pdf[i] += value;
+      // If this is the first time the cell
+      // has been touched, clear it
+      if (z_index == pdf_size) {
+        pdf[z_index] = 0;
+        pdf_size++;
+      }
+
+      // Accumulate
+      pdf[z_index] += value;
+
+      z += integration_step;
+      z_index++;
     }
 
     // Update width and decay
@@ -138,7 +137,8 @@ void range_entropy::expected_noisy::line(
     double step_size,
     bool information,
     unsigned int dimension,
-    double * const * const pdfs,
+    double * const hit_pdf,
+    double * const miss_pdf,
     double * const output) {
 
   range_entropy::expected::local l;
@@ -151,9 +151,6 @@ void range_entropy::expected_noisy::line(
   exp.distance2 = 0;
   exp.distance1 = 0;
   exp.p_not_measured = 1;
-
-  double * const hit_pdf = pdfs[0];
-  double * const miss_pdf = pdfs[1];
 
   // Iterate backwards over the cells in the line
   for (int i = num_cells - 1; i >= 0; i--) {

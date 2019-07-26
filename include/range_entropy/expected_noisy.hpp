@@ -81,7 +81,8 @@ void line(
     double step_size,
     bool entropy,
     unsigned int dimension,
-    double * const * const pdfs,
+    double * const hit_pdf,
+    double * const miss_pdf,
     double * const output);
 
 }}

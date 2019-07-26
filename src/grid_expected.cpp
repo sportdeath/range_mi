@@ -91,9 +91,8 @@ void range_entropy::GridExpected::compute_surface_beam(
         surface_.data());
   } else {
     unsigned int noise_steps = 2 * (1 + noise_width)/noise_step_size;
-    std::vector<double> pdf_hit(noise_steps);
-    std::vector<double> pdf_miss(noise_steps);
-    double * pdfs[2] = {pdf_hit.data(), pdf_miss.data()};
+    std::vector<double> hit_pdf(noise_steps);
+    std::vector<double> miss_pdf(noise_steps);
     range_entropy::expected_noisy::line(
         line.data(),
         p_free,
@@ -104,7 +103,8 @@ void range_entropy::GridExpected::compute_surface_beam(
         noise_step_size,
         information,
         dimension,
-        pdfs,
+        hit_pdf.data(),
+        miss_pdf.data(),
         surface_.data());
   }
 }
