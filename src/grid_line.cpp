@@ -104,20 +104,17 @@ void range_entropy::GridLine::sample(
 
   if (perimeter < normalized_width) {
     x = perimeter/s_abs;
-    if (s < 0) {
-      // Facing down
-      y = height - 0.0000001;
-    } else {
-      y = 0;
-    }
+    y = 0;
   } else {
-    // Horizontal
-    y = (perimeter - normalized_width)/c_abs;
-    if (c < 0) {
-      // Facing left
-      x = width - 0.0000001;
-    } else {
-      x = 0;
-    }
+    // The switch won't happen exactly at the
+    // normalized_width, so perform integer division
+    double switch_steps = std::floor(normalized_width/(c_abs + s_abs));
+    double switch_perimeter = switch_steps * (c_abs + s_abs);
+    y = (perimeter - switch_perimeter)/c_abs;
+    x = 0;
   }
+
+  // Account for other quadrants
+  if (s < 0) y = height - y - 0.000001;
+  if (c < 0) x =  width - x - 0.000001;
 }
