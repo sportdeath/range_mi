@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <random>
+#include <fstream>
 
 #include <range_entropy/expected.hpp>
 #include <range_entropy/expected_noisy.hpp>
@@ -9,9 +10,9 @@
 using namespace range_entropy;
 
 // Define constants
-double integration_step = 0.0001;
-double noise_dev = 2;
-double noise_width = 4 * noise_dev;
+double integration_step = 0.1;
+double noise_dev = 50.;
+double noise_width = 3 * noise_dev;
 unsigned int num_cells = 100;
 
 void numerical_pdf(
@@ -96,12 +97,17 @@ double numerical_expected_noisy(
   }
   
   // Perform the integration
+  // and also write the pdf to file
   double integral = 0;
+  std::ofstream f;
+  f.open("noisy_pdf.txt");
   for (unsigned int i = 0; i < convolve_size; i++) {
     double z = i * integration_step - noise_width;
     integral +=
       convolve[i] * value(z, convolve[i]) * integration_step;
+    f << i * integration_step - noise_width << " " << convolve[i] << std::endl;
   }
+  f.close();
 
   return integral;
 }
@@ -229,8 +235,8 @@ int main() {
                       expected_noisy_information1(num_cells, 0),
                       expected_noisy_information2(num_cells, 0),
                       expected_noisy_information3(num_cells, 0);
-  std::vector<double> hit_pdf(num_cells/integration_step),
-                      miss_pdf(num_cells/integration_step);
+  std::vector<double> hit_pdf((num_cells + 2 * noise_width)/integration_step, 0),
+                      miss_pdf((num_cells + 2 * noise_width)/integration_step, 0);
   expected_noisy::line(
       line.data(), p_free.data(), width.data(), num_cells,
       noise_dev, noise_width, integration_step,

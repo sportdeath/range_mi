@@ -37,14 +37,24 @@ void range_entropy::expected_noisy::pdf(
     unsigned int cell = line[line_cell];
     double v = vacancy[cell];
     double w = width[line_cell];
-    double neg_log_v = -std::log(v);
+    double neg_log_v;
+    if (v == 0) {
+      neg_log_v = 1e300;
+    } else {
+      neg_log_v = -std::log(v);
+    }
 
     // The center of the normal
     // distribution is ahead of zero
     double normal_center = variance * neg_log_v;
 
-    double normalization_constant =
-      std::exp(0.5 * variance * neg_log_v * neg_log_v);
+    double normalization_constant;
+    if (normal_center * neg_log_v > 1380) {
+      normalization_constant = 1e300;
+    } else {
+      normalization_constant =
+        std::exp(0.5 * normal_center * neg_log_v);
+    }
 
     // Until we hit the end of the cell (plus noise)
     double z = -noise_half_width;
@@ -52,7 +62,14 @@ void range_entropy::expected_noisy::pdf(
     while (z < w + noise_half_width and z + width_sum < pdf_width + noise_half_width) {
 
       // Compute the value of the PDF
-      double noiseless_value = pdf_decay * std::pow(v, z) * neg_log_v;
+      double v_to_the_z;
+      if (z < 0 && -neg_log_v * z > 690) {
+        v_to_the_z = 1e300;
+      } else {
+        v_to_the_z = std::pow(v, z);
+      }
+
+      double noiseless_value = pdf_decay * v_to_the_z * neg_log_v;
 
       // The CDF
       double normal_window =
