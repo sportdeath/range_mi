@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 import rospy
@@ -20,16 +19,21 @@ class Heatmap:
                 queue_size=1)
 
     def map_callback(self, map_):
-        x = np.arange(map_.width)
-        y = np.arange(map_.height)
-        X, Y = np.meshgrid(x, y)
-
+        # Plot the map!
         Z = np.array(map_.data).reshape(map_.width, map_.height)
+        plt.imshow(Z, origin='lower', cmap='inferno')
 
-        fig = plt.figure()
-        a = fig.add_subplot(111, projection='3d')
-        a.plot_surface(X, Y, Z, cmap='inferno')
-        plt.show()
+
+        # Get rid of axes
+        plt.box(False)
+        plt.yticks([])
+        plt.xticks([])
+        plt.tick_params(direction='in')
+
+        # Save it!
+        plt.savefig("entropy_surface.pdf", bbox_inches='tight', pad_inches=-0.03, transparent=False)
+        plt.colorbar()
+        plt.savefig("entropy_surface_colorbar.pdf", bbox_inches='tight', pad_inches=0, transparent=False)
 
 if __name__ == "__main__":
     rospy.init_node("heatmap")

@@ -8,7 +8,6 @@ using namespace range_entropy;
 
 unsigned int height = 10;
 unsigned int width = 10;
-unsigned int spatial_jitter = 4;
 unsigned int num_beams = 100;
 double eps = 0.0001;
 
@@ -18,7 +17,7 @@ std::vector<double> widths(max_cells);
 unsigned int num_cells;
 
 void axis() {
-  GridLine grid_line(height, width, spatial_jitter, num_beams);
+  GridLine grid_line(height, width, num_beams);
 
   grid_line.draw(0, 0, 0, line.data(), widths.data(), num_cells);
 
@@ -36,7 +35,7 @@ void axis() {
 }
 
 void diagonal() {
-  GridLine grid_line(height, width, spatial_jitter, num_beams);
+  GridLine grid_line(height, width, num_beams);
   grid_line.draw(0, 0, M_PI/4., line.data(), widths.data(), num_cells);
 
   unsigned int ii = 0;

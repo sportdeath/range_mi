@@ -1,2 +1,5 @@
 build
 *.sw*
+*.pdf
+*.txt
+*.png

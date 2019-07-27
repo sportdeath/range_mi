@@ -9,7 +9,7 @@ using namespace range_entropy;
 
 // Define constants
 unsigned int num_iterations = 100000;
-unsigned int num_cells = 100;
+unsigned int num_cells = 1000;
 
 // Initialize random generator
 std::random_device random_device;
@@ -36,6 +36,7 @@ int main() {
   std::chrono::duration<double> elapsed(0);
 
   for (unsigned int i = 0; i < num_iterations; i++) {
+
     // Randomize then
     random_p(p_free);
     random_p(p_not_measured);
@@ -53,8 +54,11 @@ int main() {
     elapsed += end - start;
   }
 
-
   std::cout << "Computed " << num_iterations << " beams " <<
     " with " << num_cells << " cells in " <<
     elapsed.count() << " seconds." << std::endl;
+
+  std::cout << "That makes an average time of " <<
+    (elapsed.count() * std::nano::den)/(num_iterations * num_cells) <<
+    " nanoseconds per cell" << std::endl;
 }
