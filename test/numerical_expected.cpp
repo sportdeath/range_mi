@@ -10,9 +10,10 @@
 using namespace range_entropy;
 
 // Define constants
-double integration_step = 0.1;
-double noise_dev = 50.;
-double noise_width = 3 * noise_dev;
+double integration_step = 0.001;
+double noise_dev = 2;
+double noise_width = 4 * noise_dev;
+double vacancy_scaling = 10;
 unsigned int num_cells = 100;
 
 void numerical_pdf(
@@ -133,6 +134,11 @@ int main() {
   random_p(p_free);
   random_p(p_not_measured);
   random_p(width);
+
+  // Scale p_free to make everything generally lower
+  for (unsigned int i = 0; i < num_cells; i++) {
+    p_free[i] = std::pow(p_free[i], vacancy_scaling);
+  }
 
   // Make a line
   std::vector<unsigned int> line(num_cells);

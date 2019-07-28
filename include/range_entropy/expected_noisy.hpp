@@ -6,10 +6,13 @@ namespace range_entropy {
 namespace expected_noisy {
 
 /**
- * The cumulative distribution function
- * of a normal distribution.
+ * The normal distribution.
  */
 double normal_cdf(
+    double x,
+    double mean,
+    double std_dev);
+double normal_pdf(
     double x,
     double mean,
     double std_dev);

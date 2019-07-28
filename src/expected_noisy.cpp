@@ -4,11 +4,21 @@
 #include "range_entropy/expected.hpp"
 #include "range_entropy/expected_noisy.hpp"
 
+// #define USE_ERF
+
 double range_entropy::expected_noisy::normal_cdf(
     double x,
     double mean,
     double std_dev) {
   return 0.5 * (1 + std::erf((x - mean)/(std_dev * std::sqrt(2))));
+}
+
+double range_entropy::expected_noisy::normal_pdf(
+    double x,
+    double mean,
+    double std_dev) {
+  double x_norm = (x - mean)/std_dev;
+  return std::exp(-0.5 * x_norm * x_norm)/(std_dev * std::sqrt(2 * M_PI));
 }
 
 void range_entropy::expected_noisy::pdf(
@@ -23,8 +33,6 @@ void range_entropy::expected_noisy::pdf(
     double * const pdf,
     unsigned int & pdf_size) {
 
-  double variance = noise_dev * noise_dev;
-
   double pdf_decay = 1;
   double width_sum = 0;
   pdf_size = 0;
@@ -37,47 +45,51 @@ void range_entropy::expected_noisy::pdf(
     unsigned int cell = line[line_cell];
     double v = vacancy[cell];
     double w = width[line_cell];
-    double neg_log_v;
-    if (v == 0) {
-      neg_log_v = 1e300;
-    } else {
-      neg_log_v = -std::log(v);
+    if (v <= 0) {
+      v = 0.00000001;
+    } else if (v >= 1) {
+      v = 0.99999999;
     }
 
+    double neg_log_v = -std::log(v);
+    double p_miss = std::exp(-w * neg_log_v);
+    double p_hit = 1 - p_miss;
+
+    double mean;
+
+#ifdef USE_ERF
     // The center of the normal
     // distribution is ahead of zero
-    double normal_center = variance * neg_log_v;
+    mean = noise_dev * noise_dev * neg_log_v;
+#else
+    mean = -std::log(0.5 * (1 + p_miss))/neg_log_v;
+#endif
 
-    double normalization_constant;
-    if (normal_center * neg_log_v > 1380) {
-      normalization_constant = 1e300;
-    } else {
-      normalization_constant =
-        std::exp(0.5 * normal_center * neg_log_v);
-    }
-
-    // Until we hit the end of the cell (plus noise)
+    double value;
     double z = -noise_half_width;
     unsigned int z_index = width_sum/integration_step;
     while (z < w + noise_half_width and z + width_sum < pdf_width + noise_half_width) {
 
-      // Compute the value of the PDF
-      double v_to_the_z;
-      if (z < 0 && -neg_log_v * z > 690) {
-        v_to_the_z = 1e300;
+#ifdef USE_ERF
+      double inside = 0.5 * mean * neg_log_v - z * neg_log_v;
+      double exponentiation;
+      if(inside > 690) {
+        exponentiation = 1e300;
       } else {
-        v_to_the_z = std::pow(v, z);
+        exponentiation = std::exp(inside);
       }
-
-      double noiseless_value = pdf_decay * v_to_the_z * neg_log_v;
 
       // The CDF
       double normal_window =
-        normal_cdf(z, normal_center, noise_dev) -
-        normal_cdf(z, normal_center + w, noise_dev);
+        normal_cdf(z, mean, noise_dev) -
+        normal_cdf(z, mean + w, noise_dev);
 
       // Compute the full value
-      double value = normalization_constant * normal_window * noiseless_value;
+      value = pdf_decay * exponentiation * neg_log_v * normal_window;
+
+#else
+      value = pdf_decay * p_hit * normal_pdf(z, mean, noise_dev);
+#endif
 
       // If this is the first time the cell
       // has been touched, clear it
@@ -95,7 +107,7 @@ void range_entropy::expected_noisy::pdf(
 
     // Update width and decay
     width_sum += w;
-    pdf_decay *= std::pow(v, w);
+    pdf_decay *= p_miss;
   }
 }
 
