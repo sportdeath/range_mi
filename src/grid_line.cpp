@@ -76,7 +76,7 @@ void range_entropy::GridLine::sample(
     double & angular_interpolation) const {
 
   // Calculate theta
-  theta = 2 * M_PI * angular_interpolation;
+  theta = 2 * M_PI * (angular_interpolation + 0.000000001);
 
   // Pre-compute trig values
   double s = std::sin(theta);
