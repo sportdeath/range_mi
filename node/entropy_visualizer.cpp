@@ -53,13 +53,12 @@ class EntropyVisualizer {
       // Convert to probability
       vacancy = std::vector<double>(map_info.height * map_info.width);
       for (unsigned int i = 0; i < vacancy.size(); i++) {
-        vacancy[i] = 1 - map_msg.data[i]/100.;
+        vacancy[i] = 1 - map_msg.data[i]/99.;
         if (vacancy[i] < 0  or vacancy[i] > 1) {
-          std::cout << "THIS IS BAD" << std::endl;
+          std::cout << "Vacancy out of bounds! " << vacancy[i] << std::endl;
           vacancy[i] = 0;
         }
 
-        vacancy[i] = std::pow(vacancy[i], 0.1);
       }
 
       // Initialize mutual information computation on the grid
@@ -93,7 +92,9 @@ class EntropyVisualizer {
           if (visualize and visualize_more) {
             draw_map();
           }
-          //grid_caster.reset_surface();
+          if (angular_interpolation < 1) {
+            //grid_caster.reset_surface();
+          }
           if (not ros::ok()) break;
         }
       }
@@ -133,7 +134,7 @@ class EntropyVisualizer {
       entropy_map_msg.info = map_info;
       entropy_map_msg.data = std::vector<int8_t>(grid_caster.surface().size());
       double entropy_max = *std::max_element(grid_caster.surface().begin(), grid_caster.surface().end());
-      double entropy_min = *std::min_element(grid_caster.surface().begin(), grid_caster.surface().end());
+      double entropy_min = 0;
       for (size_t i = 0; i < grid_caster.surface().size(); i++) {
         // Normalize between 0 and 1
         double normalized = (grid_caster.surface()[i] - entropy_min)/(entropy_max - entropy_min);

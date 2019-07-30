@@ -1,11 +1,17 @@
 #pragma once
 
+#include <cmath>
+
 /**
  * Computes a variety of quantities in expectation
  */
 
 namespace range_entropy {
 namespace expected {
+
+const double vacancy_min = 0.000000001;
+const double pdf_max = -std::log(vacancy_min);
+const double entropy_min = -std::log(pdf_max);
 
 /**
  * The functions this class aims to
@@ -25,7 +31,7 @@ struct local {
   double p_not_measured;
   double miss_p;
   double miss_info;
-  double miss_info_inv;
+  double neg_log_p_free_inv;
   double hit_p;
   double zero_info;
 };

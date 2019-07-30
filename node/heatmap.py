@@ -20,9 +20,8 @@ class Heatmap:
 
     def map_callback(self, map_):
         # Plot the map!
-        Z = np.array(map_.data).reshape(map_.width, map_.height)
+        Z = np.array(map_.data).reshape(map_.height, map_.width)
         plt.imshow(Z, origin='lower', cmap='inferno')
-
 
         # Get rid of axes
         plt.box(False)

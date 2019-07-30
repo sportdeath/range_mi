@@ -43,14 +43,10 @@ void range_entropy::expected::update_local(
     local & l) {
 
   // Clip the inputs to be defined.
-  if (p_free >= 1) {
-    p_free = 0.9999999;
-  } else if (p_free <= 0) {
-    p_free = 0.0000001;
-  }
-
-  if (width <= 0) {
-    width = 0.0000001;
+  if (p_free > 1 - vacancy_min) {
+    p_free = 1 - vacancy_min;
+  } else if (p_free < vacancy_min) {
+    p_free = vacancy_min;
   }
 
   l.width = width;
@@ -83,7 +79,7 @@ void range_entropy::expected::update_local(
 
   // The inverse of the information
   // precomputed for optimization
-  l.miss_info_inv = 1./l.miss_info;
+  l.neg_log_p_free_inv = -1./log_p_free;
 
   // The information gained by hitting
   // an infinitesimal region.
@@ -103,13 +99,14 @@ double range_entropy::expected::p_not_measured_hit(
 
 double range_entropy::expected::distance1_hit(
     const local & l) {
-  return l.width * (l.hit_p * l.miss_info_inv - l.miss_p);
+  return l.hit_p * l.neg_log_p_free_inv - l.width * l.miss_p;
 }
 
 double range_entropy::expected::distance2_hit(
     const local & l) {
-  return l.width * l.width * (
-      2 * l.miss_info_inv * l.miss_info_inv * l.hit_p - l.miss_p * (l.miss_info + 2) * l.miss_info_inv);
+  return 
+      2 * l.hit_p * l.neg_log_p_free_inv * l.neg_log_p_free_inv -
+      l.width * l.miss_p * (l.width + 2 * l.neg_log_p_free_inv);
 }
 
 double range_entropy::expected::information1_hit(
@@ -119,15 +116,17 @@ double range_entropy::expected::information1_hit(
 
 double range_entropy::expected::information2_hit(
     const local & l) {
-  return l.width * (
-      l.hit_p * (2 + l.zero_info) * l.miss_info_inv - l.miss_p * (2 + l.miss_info + l.zero_info));
+  return 
+      l.hit_p * (2 + l.zero_info) * l.neg_log_p_free_inv - 
+      l.width * l.miss_p * (2 + l.miss_info + l.zero_info);
 }
 
 double range_entropy::expected::information3_hit(
     const local & l) {
-  return l.width * l.width * (
-      l.hit_p * (6 + 2 * l.zero_info) * l.miss_info_inv * l.miss_info_inv -
-      l.miss_p * l.miss_info_inv * (6 + l.miss_info + (l.miss_info + l.zero_info) * (l.miss_info + 2)));
+  return 
+      l.hit_p * l.neg_log_p_free_inv * l.neg_log_p_free_inv * (6 + 2 * l.zero_info) -
+      l.width * l.width * l.miss_p * (l.zero_info + l.miss_info + 3) -
+      l.width * l.miss_p * l.neg_log_p_free_inv * (2 * l.zero_info + 6);
 }
 
 double range_entropy::expected::p_not_measured_miss(
@@ -201,12 +200,16 @@ void range_entropy::expected::line(
   local l;
   expected exp;
 
-  // Set everything to zero
-  exp.information3 = 0;
-  exp.information2 = 0;
-  exp.information1 = 0;
-  exp.distance2 = 0;
-  exp.distance1 = 0;
+  // Initialize everything
+  // Note that these values are computed by
+  // integrating from 0 -> infinity
+  // the expected value when the vacancy is
+  // vmin everywhere.
+  exp.information3 = (6 + 2 * entropy_min)/(pdf_max * pdf_max);
+  exp.information2 = (2 + entropy_min)/pdf_max;
+  exp.information1 = 1 + entropy_min;
+  exp.distance2 = 2/(pdf_max * pdf_max);
+  exp.distance1 = 1./pdf_max;
   exp.p_not_measured = 1;
 
   // Iterate backwards over the cells in the line
@@ -246,13 +249,13 @@ void range_entropy::expected::line(
     if (information) {
       switch (dimension) {
         case 3:
-          output[j] += exp.information3;
+          output[j] += exp.information3 - exp.distance2 * (entropy_min + 1);
           break;
         case 2:
-          output[j] += exp.information2;
+          output[j] += exp.information2 - exp.distance1 * (entropy_min + 1);
           break;
         case 1:
-          output[j] += exp.information1;
+          output[j] += exp.information1 - (entropy_min + 1);
           break;
       }
     } else {
