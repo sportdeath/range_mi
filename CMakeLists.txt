@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(range_entropy)
+project(range_mi)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -10,7 +10,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+#set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
 
 ######################################

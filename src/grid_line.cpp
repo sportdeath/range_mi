@@ -1,15 +1,17 @@
 #include <cmath>
-#include <utility>
+#include <algorithm>
 
-#include "range_entropy/grid_line.hpp"
+#include "range_mi/grid_line.hpp"
 
-void range_entropy::GridLine::draw(
+void range_mi::grid_line::draw(
+    unsigned int height,
+    unsigned int width,
     double x,
     double y,
     double theta,
     unsigned int * const line,
     double * const widths,
-    unsigned int & num_cells) const {
+    unsigned int & num_cells) {
 
   // Pre-compute sin and cos
   double sin = std::sin(theta);
@@ -68,15 +70,16 @@ void range_entropy::GridLine::draw(
   }
 }
 
-void range_entropy::GridLine::sample(
+void range_mi::grid_line::sample(
+    unsigned int height,
+    unsigned int width,
+    double theta,
     double & x,
     double & y,
-    double & theta,
-    double & spatial_interpolation,
-    double & angular_interpolation) const {
+    double & spatial_interpolation) {
 
-  // Calculate theta
-  theta = 2 * M_PI * (angular_interpolation + 0.000000001);
+  // Account for small offset
+  theta += 0.000000000001;
 
   // Pre-compute trig values
   double s = std::sin(theta);
@@ -96,10 +99,9 @@ void range_entropy::GridLine::sample(
   double steps = (normalized_width + normalized_height)/(c_abs + s_abs);
   // Use it to update the interpolation
   spatial_interpolation += 1./steps;
-  // Update if necessary
+  // Reset if necessary
   if (spatial_interpolation >= 1) {
     spatial_interpolation = 0;
-    angular_interpolation += 1./num_beams;
   }
 
   if (perimeter < normalized_width) {
