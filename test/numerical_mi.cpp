@@ -7,7 +7,7 @@
 #include <range_mi/barely_distorted.hpp>
 
 // Define constants
-double integration_step = 0.001;
+double integration_step = 0.0001;
 double vacancy_scaling = 10;
 double dtheta = 0.1;
 double noise_l = 99999999;
@@ -122,15 +122,18 @@ int main() {
   std::cout << "Computing the barely distorted mutual information numerically..." << std::endl;
 
   std::vector<double> numerical_mi_(num_dimensions);
-  for (unsigned int i = 1; i <= num_dimensions; i++) {
-    numerical_mi_[i] = numerical_mi(pdf.data(), pdf_size, i);
+  for (unsigned int i = 0; i < num_dimensions; i++) {
+    numerical_mi_[i] = numerical_mi(pdf.data(), pdf_size, i + 1);
   }
 
   std::cout << "Computing the barely distorted mutual information exactly..." << std::endl;
 
   std::vector<double> exact_mi(num_dimensions);
-  std::vector<double> output(num_cells);
-  for (unsigned int i = 1; i <= num_dimensions; i++) {
+  std::vector<double> mi(num_cells);
+  for (unsigned int i = 0; i < num_dimensions; i++) {
+    // Clear the output
+    std::fill(mi.begin(), mi.end(), 0);
+
     range_mi::barely_distorted::line(
         line.data(),
         vacancy.data(),
@@ -139,14 +142,14 @@ int main() {
         num_cells,
         dtheta,
         noise_l,
-        i,
-        output.data());
+        i + 1,
+        mi.data());
 
-    exact_mi[i] = output[0];
+    exact_mi[i] = mi[0];
   }
 
   std::cout << std::endl;
-  for (unsigned int i = 1; i <= num_dimensions; i++) {
-    std::cout << "d" << i << ": " << numerical_mi_[i] << ", " << exact_mi[i] << std::endl;
+  for (unsigned int i = 0; i < num_dimensions; i++) {
+    std::cout << "d" << i + 1 << ": " << numerical_mi_[i] << ", " << exact_mi[i] << std::endl;
   }
 }

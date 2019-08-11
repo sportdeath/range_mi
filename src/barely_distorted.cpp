@@ -1,5 +1,6 @@
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 #include "range_mi/barely_distorted.hpp"
 
@@ -18,9 +19,9 @@ void range_mi::barely_distorted::line(
   double neg_log_noise_l = -std::log(noise_l);
 
   // Precompute factorials
-  std::vector<unsigned int> factorial(dimension);
+  std::vector<unsigned int> factorial(dimension + 1);
   factorial[0] = 1;
-  for (unsigned int k = 1; k < dimension; k++) {
+  for (unsigned int k = 1; k <= dimension; k++) {
     factorial[k] = factorial[k - 1] * k;
   }
 
@@ -58,14 +59,14 @@ void range_mi::barely_distorted::line(
   std::vector<double> l_to_the_neg(dimension);
 
   // Iterate backwards over the cells in the line
-  for (int i = num_cells - 1; i >= 0; i--) {
+  for (int line_index = num_cells - 1; line_index >= 0; line_index--) {
 
     // Fetch the vacancy, p_not_measured,
     // and width of the current cell
-    unsigned int j = line[i];
-    double v = vacancy[j];
-    double pnm = p_not_measured[j];
-    double w = width[i];
+    unsigned int map_index = line[line_index];
+    double v = vacancy[map_index];
+    double pnm = p_not_measured[map_index];
+    double w = width[line_index];
 
     // Compute the negative log of the vacancy
     double l;
@@ -123,10 +124,10 @@ void range_mi::barely_distorted::line(
         miss_info +=
           binom * w_to_the[k - i] * (distk_info[i] + pnm * w * l * distk[i]);
       }
-      distk_info[i] += p_miss * miss_info;
-      distk_info[i] -=
+      distk_info[k] += p_miss * miss_info;
+      distk_info[k] -=
         pnm * l_to_the_neg[k] * (gamma[k + 1] + neg_log_l * gamma[k]);
-      distk_info[i] += (1 - pnm) * (1 - p_miss) * distk_info_noise[k];
+      distk_info[k] += (1 - pnm) * (1 - p_miss) * distk_info_noise[k];
 
       double miss_dist = 0;
       for (int i = 0; i <= k; i++) {
@@ -135,13 +136,13 @@ void range_mi::barely_distorted::line(
         miss_dist +=
           binom * w_to_the[k - i] * distk[i];
       }
-      distk[i] += p_miss * miss_dist;
-      distk[i] -= l_to_the_neg[k] * gamma[k];
+      distk[k] += p_miss * miss_dist;
+      distk[k] -= l_to_the_neg[k] * gamma[k];
     }
 
     // MI += E[R^(n-1)I(R)]dtheta
-    output[j] += distk_info[dimension - 1] * dtheta;
+    output[map_index] += distk_info[dimension - 1] * dtheta;
     // MI -= (1 - log Lambda) E[R^(n-1)]dtheta
-    output[j] -= (1 + neg_log_noise_l) * distk[dimension - 1] * dtheta;
+    output[map_index] -= (1 + neg_log_noise_l) * distk[dimension - 1] * dtheta;
   }
 }
