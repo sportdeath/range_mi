@@ -7,7 +7,7 @@
 #include <range_mi/barely_distorted.hpp>
 
 // Define constants
-double integration_step = 0.0001;
+double integration_step = 0.00001;
 double vacancy_scaling = 10;
 double dtheta = 0.1;
 double noise_l = 99999999;
@@ -128,7 +128,7 @@ int main() {
 
   std::cout << "Computing the barely distorted mutual information exactly..." << std::endl;
 
-  std::vector<double> exact_mi(num_dimensions);
+  std::vector<double> exact_mi(num_dimensions, 0);
   std::vector<double> mi(num_cells);
   for (unsigned int i = 0; i < num_dimensions; i++) {
     // Clear the output

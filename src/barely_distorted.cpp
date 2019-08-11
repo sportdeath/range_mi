@@ -1,6 +1,5 @@
 #include <cmath>
 #include <vector>
-#include <iostream>
 
 #include "range_mi/barely_distorted.hpp"
 
@@ -31,7 +30,7 @@ void range_mi::barely_distorted::line(
   double noise_l_inv = 1;
   for (unsigned int k = 0; k < dimension; k++) {
     distk_info_noise[k] =
-      -noise_l_inv * (factorial[k+1] + factorial[k] * neg_log_noise_l);
+      noise_l_inv * (factorial[k+1] + factorial[k] * neg_log_noise_l);
     noise_l_inv /= noise_l;
   }
 
@@ -77,7 +76,7 @@ void range_mi::barely_distorted::line(
     }
 
     // Clip the vacancy to the maximum
-    l = std::max(l, noise_l);
+    l = std::min(l, noise_l);
 
     // Then compute the negative log of l
     double neg_log_l;
@@ -124,8 +123,8 @@ void range_mi::barely_distorted::line(
         miss_info +=
           binom * w_to_the[k - i] * (distk_info[i] + pnm * w * l * distk[i]);
       }
-      distk_info[k] += p_miss * miss_info;
-      distk_info[k] -=
+      distk_info[k] = p_miss * miss_info;
+      distk_info[k] +=
         pnm * l_to_the_neg[k] * (gamma[k + 1] + neg_log_l * gamma[k]);
       distk_info[k] += (1 - pnm) * (1 - p_miss) * distk_info_noise[k];
 
@@ -136,8 +135,8 @@ void range_mi::barely_distorted::line(
         miss_dist +=
           binom * w_to_the[k - i] * distk[i];
       }
-      distk[k] += p_miss * miss_dist;
-      distk[k] -= l_to_the_neg[k] * gamma[k];
+      distk[k] = p_miss * miss_dist;
+      distk[k] += l_to_the_neg[k] * gamma[k];
     }
 
     // MI += E[R^(n-1)I(R)]dtheta
