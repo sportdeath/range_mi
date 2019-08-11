@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>range_entropy</name>
+  <name>range_mi</name>
   <version>0.0.0</version>
-  <description>Tools for automously exploring an unknown environment.</description>
+  <description>Tools for computing the mutual information between occupancy maps and range measurements.</description>
 
   <maintainer email="tfh@mit.edu">tfh</maintainer>
 

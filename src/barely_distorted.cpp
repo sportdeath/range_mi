@@ -81,7 +81,8 @@ void range_mi::barely_distorted::line(
     // Then compute the negative log of l
     double neg_log_l;
     if (l <= 0) {
-      neg_log_l = noise_l;
+      // When l = 0 this terms is zeroed out by gammas
+      neg_log_l = 0;
     } else {
       neg_log_l = -std::log(l);
     }
@@ -110,7 +111,13 @@ void range_mi::barely_distorted::line(
     // precompute
     l_to_the_neg[0] = 1;
     for (unsigned int k = 1; k < dimension; k++) {
-      l_to_the_neg[k] = l_to_the_neg[k - 1]/l;
+      if (l > 0) {
+        l_to_the_neg[k] = l_to_the_neg[k - 1]/l;
+      } else {
+        // Watch out for division by zero
+        // When l = 0 this is zeroed out by gammas
+        l_to_the_neg[k] = 1;
+      }
     }
 
     // Update the expected values

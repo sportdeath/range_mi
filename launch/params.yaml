@@ -1,17 +1,14 @@
 map_topic: "/map"
-entropy_topic: "/entropy"
-condition_topic: "/condition"
-reset_condition_topic: "/reset_condition"
+mi_topic: "/mi"
+condition_topic: "/condition_mi"
+reset_condition_topic: "/reset_condition_mi"
 
-num_beams: 300
+num_beams: 600
 condition_steps: 50000
-noise_dev: 0
-noise_width: 40
-noise_step_size: 1.
+noise_l: 999999999
 
 visualize: true
 visualize_more: true
-entropy_viz_topic: "/entropy_map"
-p_not_measured_viz_topic: "/p_not_measured"
+mi_map_topic: "/mi_map"
+p_not_measured_map_topic: "/p_not_measured_map"
 click_condition_topic: "/clicked_point"
-click_topic: "/clicked_point"

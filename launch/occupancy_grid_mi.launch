@@ -1,0 +1,11 @@
+<launch>
+  <!-- Launch a map from the maps folder-->
+  <arg name="map" default="$(find range_mi)/maps/classroom_incomplete.yaml"/>
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
+
+  <!-- Launch the visualizer -->
+  <node pkg="range_mi" name="occupancy_grid_mi" type="occupancy_grid_mi" output="screen">
+    <rosparam command="load" file="$(find range_mi)/launch/params.yaml"/>
+  </node>
+
+</launch>
