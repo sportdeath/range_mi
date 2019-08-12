@@ -27,8 +27,6 @@ void range_mi::GridMI::compute_mi_beam(
     const double * const vacancy,
     double theta,
     double dtheta,
-    double noise_l,
-    unsigned int dimension,
     double & spatial_interpolation) {
 
   // Convert the interpolation parameters to
@@ -48,15 +46,13 @@ void range_mi::GridMI::compute_mi_beam(
       num_cells);
 
   // Accumulate the mutual information
-  range_mi::barely_distorted::line(
+  range_mi::barely_distorted::line<dimension>(
       line.data(),
       vacancy,
       p_not_measured_.data(),
       widths.data(),
       num_cells,
       dtheta,
-      noise_l,
-      dimension,
       mi_.data());
 }
 
@@ -66,8 +62,7 @@ void range_mi::GridMI::condition(
     double y,
     double theta_min,
     double theta_max,
-    double dtheta,
-    unsigned int dimension) {
+    double dtheta) {
 
   // Clear the old p_measured
   std::fill(p_not_measured_single.begin(), p_not_measured_single.end(), 0);
@@ -83,12 +78,11 @@ void range_mi::GridMI::condition(
         num_cells);
 
     // Accumulate p_not_measured along the line
-    range_mi::p_not_measured::line(
+    range_mi::p_not_measured::line<dimension>(
         line.data(),
         vacancy,
         widths.data(),
         num_cells,
-        dimension,
         dtheta,
         p_not_measured_single.data());
   }

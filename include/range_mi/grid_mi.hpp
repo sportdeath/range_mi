@@ -32,8 +32,6 @@ public:
       const double * const vacancy,
       double theta,
       double dtheta,
-      double noise_l,
-      unsigned int dimension,
       double & spatial_interpolation);
 
   void condition(
@@ -42,8 +40,7 @@ public:
       double y,
       double theta_min,
       double theta_max,
-      double dtheta,
-      unsigned int dimension);
+      double dtheta);
 
   void reset_mi() {
     std::fill(mi_.begin(), mi_.end(), 0);
@@ -58,6 +55,8 @@ public:
   const std::vector<double> & p_not_measured() const {
     return p_not_measured_;
   }
+
+  static const unsigned int dimension = 2;
 };
 
 }

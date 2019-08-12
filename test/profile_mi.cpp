@@ -9,8 +9,7 @@
 unsigned int num_iterations = 100000;
 unsigned int num_cells = 1000;
 double dtheta = 0.1;
-double noise_l = 99999999;
-unsigned int dimension = 2;
+const unsigned int dimension = 2;
 
 // Initialize random generator
 std::random_device random_device;
@@ -48,15 +47,13 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     // Compute the entropy
-    range_mi::barely_distorted::line(
+    range_mi::barely_distorted::line<dimension>(
         line.data(),
         vacancy.data(),
         p_not_measured.data(),
         width.data(),
         num_cells,
         dtheta,
-        noise_l,
-        dimension,
         mi.data());
 
     auto end = std::chrono::high_resolution_clock::now();

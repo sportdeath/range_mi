@@ -10,9 +10,8 @@
 double integration_step = 0.00001;
 double vacancy_scaling = 10;
 double dtheta = 0.1;
-double noise_l = 99999999;
 unsigned int num_cells = 100;
-unsigned int num_dimensions = 5;
+const unsigned int num_dimensions = 5;
 
 void numerical_pdf(
     const unsigned int * const line,
@@ -66,7 +65,7 @@ double numerical_mi(
       dtheta;
 
     h_Z_given_M +=
-      (1 - std::log(noise_l)) *
+      (1 - std::log(range_mi::barely_distorted::noise_l)) *
       pdf[i] *
       std::pow(r, dimension - 1) *
       integration_step *
@@ -130,23 +129,33 @@ int main() {
 
   std::vector<double> exact_mi(num_dimensions, 0);
   std::vector<double> mi(num_cells);
-  for (unsigned int i = 0; i < num_dimensions; i++) {
-    // Clear the output
-    std::fill(mi.begin(), mi.end(), 0);
 
-    range_mi::barely_distorted::line(
-        line.data(),
-        vacancy.data(),
-        p_not_measured.data(),
-        width.data(),
-        num_cells,
-        dtheta,
-        noise_l,
-        i + 1,
-        mi.data());
-
-    exact_mi[i] = mi[0];
-  }
+  // Clear the output
+  std::fill(mi.begin(), mi.end(), 0);
+  range_mi::barely_distorted::line<1>(
+      line.data(), vacancy.data(), p_not_measured.data(),
+      width.data(), num_cells, dtheta, mi.data());
+  exact_mi[0] = mi[0];
+  std::fill(mi.begin(), mi.end(), 0);
+  range_mi::barely_distorted::line<2>(
+      line.data(), vacancy.data(), p_not_measured.data(),
+      width.data(), num_cells, dtheta, mi.data());
+  exact_mi[1] = mi[0];
+  std::fill(mi.begin(), mi.end(), 0);
+  range_mi::barely_distorted::line<3>(
+      line.data(), vacancy.data(), p_not_measured.data(),
+      width.data(), num_cells, dtheta, mi.data());
+  exact_mi[2] = mi[0];
+  std::fill(mi.begin(), mi.end(), 0);
+  range_mi::barely_distorted::line<4>(
+      line.data(), vacancy.data(), p_not_measured.data(),
+      width.data(), num_cells, dtheta, mi.data());
+  exact_mi[3] = mi[0];
+  std::fill(mi.begin(), mi.end(), 0);
+  range_mi::barely_distorted::line<5>(
+      line.data(), vacancy.data(), p_not_measured.data(),
+      width.data(), num_cells, dtheta, mi.data());
+  exact_mi[4] = mi[0];
 
   std::cout << std::endl;
   for (unsigned int i = 0; i < num_dimensions; i++) {
