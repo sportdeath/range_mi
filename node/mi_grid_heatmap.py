@@ -4,17 +4,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import rospy
-from range_entropy.msg import EntropyMap
+from range_mi.msg import MIGrid
 
-class Heatmap:
+class MIGridHeatmap:
 
     def __init__(self):
-        topic = "/entropy"
+        topic = "/mi"
 
         # Subscribe to vectorized maps
         self.sub = rospy.Subscriber(
                 topic,
-                EntropyMap,
+                MIGrid,
                 self.map_callback,
                 queue_size=1)
 
@@ -30,11 +30,11 @@ class Heatmap:
         plt.tick_params(direction='in')
 
         # Save it!
-        plt.savefig("entropy_surface.pdf", bbox_inches='tight', pad_inches=-0.03, transparent=False)
+        plt.savefig("mi_grid.pdf", bbox_inches='tight', pad_inches=-0.03, transparent=False)
         plt.colorbar()
-        plt.savefig("entropy_surface_colorbar.pdf", bbox_inches='tight', pad_inches=0, transparent=False)
+        plt.savefig("mi_grid_colorbar.pdf", bbox_inches='tight', pad_inches=0, transparent=False)
 
 if __name__ == "__main__":
-    rospy.init_node("heatmap")
-    hm = Heatmap()
+    rospy.init_node("mi_grid_heatmap")
+    hm = MIGridHeatmap()
     rospy.spin()

@@ -22,8 +22,6 @@ class OccupancyGridMI {
       // Ray tracing parameters
       n.getParam("num_beams", num_beams);
       n.getParam("condition_steps", condition_steps);
-      // Mutual information parameters
-      n.getParam("noise_l", noise_l);
       // Visualization vvv
       std::string click_condition_topic, mi_map_topic, p_not_measured_map_topic;
       n.getParam("visualize", visualize);
@@ -78,8 +76,6 @@ class OccupancyGridMI {
             vacancy.data(),
             theta,
             dtheta,
-            noise_l,
-            2,
             spatial_interpolation);
 
         if (spatial_interpolation == 0) {
@@ -111,8 +107,7 @@ class OccupancyGridMI {
           vacancy.data(),
           x, y,
           0, 2 * M_PI,
-          dtheta,
-          2);
+          dtheta);
 
       // Update the mutual information
       compute_mi();
@@ -162,7 +157,6 @@ class OccupancyGridMI {
     // Parameters
     int num_beams;
     int condition_steps;
-    double noise_l;
     bool visualize, visualize_more;
 
     // Map data

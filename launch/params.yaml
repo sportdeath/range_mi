@@ -5,7 +5,6 @@ reset_condition_topic: "/reset_condition_mi"
 
 num_beams: 600
 condition_steps: 50000
-noise_l: 999999999
 
 visualize: true
 visualize_more: true
