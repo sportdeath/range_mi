@@ -42,7 +42,7 @@ void range_pdf(
     // Compute the negative log of the vacancy
     double l;
     if (v <= 0) {
-      l = 99999999999;
+      l = 9999999999999999;
     } else {
       l = -std::log(v);
     }
@@ -56,7 +56,12 @@ void range_pdf(
 
     // The center of mass
     // (1 - exp(-l*w))/2 = 1 - exp(-l*com)
-    double center_of_mass = -std::log(0.5 * (1 + p_miss))/l;
+    double center_of_mass;
+    if (l > 0) {
+      center_of_mass = -std::log(0.5 * (1 + p_miss))/l;
+    } else {
+      center_of_mass = 0;
+    }
 
     double z = -noise_half_width;
     unsigned int z_index = width_sum/integration_step;
@@ -154,7 +159,7 @@ void line(
     // Compute the negative log of the vacancy
     double l;
     if (v <= 0) {
-      l = 9999999999999;
+      l = 9999999999999999;
     } else {
       l = -std::log(v);
     }
@@ -226,12 +231,11 @@ void line(
       for (int i = 0; i <= k; i++) {
         unsigned int binom =
           factorial[k]/(factorial[i] * factorial[k - i]);
-        if (i == 0 or i == 1) {
+        miss_distk_info +=
+          binom * w_to_the[k - i] * (distk_info[i] + w * l * distk[i]);
+        if (i == 2) {
           miss_distk_info +=
-            binom * w_to_the[k - i] * (distk_info[i] + w * l * distk[i]);
-        } else if (i == 2) {
-          miss_distk_info +=
-            binom * w_to_the[k - i] * (distk_info[i] + w * l * (distk[i] + noise_dev * noise_dev));
+            binom * w_to_the[k - i] * w * l * noise_dev * noise_dev;
         }
         miss_distk +=
           binom * w_to_the[k - i] * distk[i];
@@ -250,8 +254,8 @@ void line(
       for (unsigned int i = 0; i < miss_pdf_size; i++) {
         double r = integration_step * i - noise_half_width;
         if (pdf[hit_pdf_size + i] > 0) {
-          distk_info[k] -=
-            pdf[hit_pdf_size + i] * std::pow(r + w, k) *
+          distk_info[k] +=
+            p_miss * pdf[hit_pdf_size + i] * std::pow(r + w, k) *
             (std::log(pdf[hit_pdf_size + i]) - l * w) * integration_step;
         }
       }
@@ -261,13 +265,14 @@ void line(
     }
 
     // MI += E[R^(n-1)I(R)]dtheta
-    output[map_index] += distk_info[dimension - 1] * dtheta;
+    double mi = distk_info[dimension - 1] * dtheta;
     // MI -= E[I(N)]E[R^(n-1)]dtheta
-    output[map_index] -= distk_info_noise[0] * distk[dimension - 1] * dtheta;
+    mi -= distk_info_noise[0] * distk[dimension - 1] * dtheta;
     if (dimension == 3) {
       // MI -= E[N^2I(N)]dtheta
-      output[map_index] -= distk_info_noise[2] * dtheta;
+      mi -= distk_info_noise[2] * dtheta;
     }
+    if (mi > 0) output[map_index] += mi;
   }
 }
 
