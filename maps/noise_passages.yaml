@@ -1,0 +1,7 @@
+image: noise_passages.png
+resolution: 0.1
+origin:  [0, 0, 0]
+negate: 0
+occupied_thresh: 1
+free_thresh: 0
+mode: scale

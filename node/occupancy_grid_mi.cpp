@@ -102,8 +102,8 @@ class OccupancyGridMI {
 
     void click_callback(const geometry_msgs::PointStamped & click_msg) {
       // Condition the map on the clicked point
-      double x = click_msg.point.x;
-      double y = click_msg.point.y;
+      double x = click_msg.point.x/map_info.resolution;
+      double y = click_msg.point.y/map_info.resolution;
       double dtheta = (2 * M_PI)/condition_steps;
       mi_computer.condition(
           vacancy.data(),
