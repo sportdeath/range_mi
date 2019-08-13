@@ -1,15 +1,22 @@
 #include <cmath>
 
 #include "range_mi/barely_distorted.hpp"
+#include "range_mi/distorted.hpp"
 #include "range_mi/p_not_measured.hpp"
 #include "range_mi/grid_line.hpp"
 #include "range_mi/grid_mi.hpp"
 
 range_mi::GridMI::GridMI(
     unsigned int height_,
-    unsigned int width_) :
+    unsigned int width_,
+    double noise_dev_,
+    double noise_half_width_,
+    double integration_step_) :
   height(height_),
-  width(width_) {
+  width(width_),
+  noise_dev(noise_dev_),
+  noise_half_width(noise_half_width_),
+  integration_step(integration_step_) {
 
   // Set the mutual information to zero
   mi_ = std::vector<double>(height * width, 0);
@@ -21,6 +28,11 @@ range_mi::GridMI::GridMI(
   line = std::vector<unsigned int>(2 * std::max(height, width));
   widths = std::vector<double>(2 * std::max(height, width));
   p_not_measured_single = std::vector<double>(height * width, 0);
+
+  if (noise_dev > 0) {
+    // Allocate free space for computing density functions
+    pdf = std::vector<double>((4 * noise_half_width + 2)/integration_step);
+  }
 }
 
 void range_mi::GridMI::compute_mi_beam(
@@ -46,14 +58,28 @@ void range_mi::GridMI::compute_mi_beam(
       num_cells);
 
   // Accumulate the mutual information
-  range_mi::barely_distorted::line<dimension>(
-      line.data(),
-      vacancy,
-      p_not_measured_.data(),
-      widths.data(),
-      num_cells,
-      dtheta,
-      mi_.data());
+  if (noise_dev <= 0) {
+    range_mi::barely_distorted::line<dimension>(
+        line.data(),
+        vacancy,
+        p_not_measured_.data(),
+        widths.data(),
+        num_cells,
+        dtheta,
+        mi_.data());
+  } else {
+    range_mi::distorted::line<dimension>(
+        line.data(),
+        vacancy,
+        widths.data(),
+        num_cells,
+        noise_dev,
+        noise_half_width,
+        integration_step,
+        dtheta,
+        pdf.data(),
+        mi_.data());
+  }
 }
 
 void range_mi::GridMI::condition(

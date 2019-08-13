@@ -39,7 +39,7 @@ void line(
   }
 
   // Initialize the expected values
-  // E[N^k] to E[N^k]
+  // E[R^k] to E[N^k]
   std::array<double, dimension> distk;
   noise_l_inv = 1;
   for (unsigned int k = 0; k < dimension; k++) {

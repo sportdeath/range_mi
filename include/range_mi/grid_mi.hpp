@@ -15,6 +15,10 @@ private:
   // Map parameters
   unsigned int height, width;
 
+  // Noise parameters
+  double noise_dev, noise_half_width, integration_step;
+  std::vector<double> pdf;
+
   // Temporary storage for lines
   std::vector<unsigned int> line;
   std::vector<double> widths;
@@ -26,7 +30,10 @@ public:
 
   GridMI(
       unsigned int height,
-      unsigned int width);
+      unsigned int width,
+      double noise_dev=0,
+      double noise_half_width=0,
+      double integration_step=0);
 
   void compute_mi_beam(
       const double * const vacancy,
