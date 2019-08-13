@@ -54,6 +54,8 @@ class OccupancyGridMI {
           vacancy[i] = 0;
         }
 
+        vacancy[i] = std::pow(vacancy[i], map_info.resolution);
+
       }
 
       // Initialize mutual information computation on the grid

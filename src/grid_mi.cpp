@@ -89,6 +89,6 @@ void range_mi::GridMI::condition(
 
   // Update the probabilities
   for (unsigned int i = 0; i < p_not_measured_.size(); i++) {
-    p_not_measured_[i] *= p_not_measured_single[i];
+    p_not_measured_[i] = std::min(p_not_measured_[i], p_not_measured_single[i]);
   }
 }

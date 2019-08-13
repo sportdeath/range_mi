@@ -7,7 +7,7 @@ num_beams: 600
 condition_steps: 50000
 
 visualize: true
-visualize_more: true
+visualize_more: false
 mi_map_topic: "/mi_map"
 p_not_measured_map_topic: "/p_not_measured_map"
 click_condition_topic: "/clicked_point"

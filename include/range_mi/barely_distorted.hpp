@@ -28,21 +28,14 @@ void line(
     factorial[k] = factorial[k - 1] * k;
   }
 
-  // Precompute the expected values
-  // E[N^kI(N)]
-  std::array<double, dimension> distk_info_noise;
-  double noise_l_inv = 1;
-  for (unsigned int k = 0; k < dimension; k++) {
-    distk_info_noise[k] =
-      noise_l_inv * (factorial[k+1] + factorial[k] * neg_log_noise_l);
-    noise_l_inv /= noise_l;
-  }
-
   // Initialize the expected values
   // E[R^kI(R)] to E[N^kI(N)]
   std::array<double, dimension> distk_info;
+  double noise_l_inv = 1;
   for (unsigned int k = 0; k < dimension; k++) {
-    distk_info[k] = distk_info_noise[k];
+    distk_info[k] =
+      noise_l_inv * (factorial[k+1] + factorial[k] * neg_log_noise_l);
+    noise_l_inv /= noise_l;
   }
 
   // Initialize the expected values
@@ -140,7 +133,7 @@ void line(
       distk_info[k] = p_miss * miss_distk_info;
       distk_info[k] +=
         pnm * l_to_the_neg[k] * (gamma[k + 1] + neg_log_l * gamma[k]);
-      distk_info[k] += (1 - pnm) * (1 - p_miss) * distk_info_noise[k];
+      distk_info[k] += (1 - pnm) * l_to_the_neg[k] * gamma[k] * (1 + neg_log_noise_l);
 
       distk[k] = p_miss * miss_distk;
       distk[k] += l_to_the_neg[k] * gamma[k];
