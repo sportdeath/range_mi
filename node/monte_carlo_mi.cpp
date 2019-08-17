@@ -64,6 +64,7 @@ class MonteCarloMI {
       // Also initialize a place for randomized and conditional vacancies
       binary_vacancy = std::vector<double>(map_info.height * map_info.width);
       conditional_vacancy = std::vector<double>(map_info.height * map_info.width);
+      conditional_vacancy_viz = std::vector<double>(map_info.height * map_info.width);
 
       // And a place for drawing lines
       line = std::vector<unsigned int>(2 * std::max(map_info.height, map_info.width));
@@ -118,7 +119,7 @@ class MonteCarloMI {
 
           // For each beam cast rays and update the map
           for (int beam = 0; beam < num_beams; beam++) {
-            double theta = beam/(2 * M_PI);
+            double theta = beam * (2 * M_PI)/(num_beams);
 
             double y = std::floor(cell/map_info.width);
             double x = cell - y * map_info.width;
@@ -143,6 +144,14 @@ class MonteCarloMI {
               // Stop if we have reached an occupied cell
               if (binary_vacancy[line_cell] == 0) break;
             }
+          }
+
+          // Choose the center cell for visualization purposes
+          if (cell == (map_info.height * map_info.width)/2 + map_info.width/2) {
+            for (unsigned int i = 0; i < vacancy.size(); i++) {
+              conditional_vacancy_viz[i] = conditional_vacancy[i];
+            }
+            conditional_vacancy_viz[cell] = 0;
           }
 
           // Compute the entropy of the new map
@@ -197,7 +206,7 @@ class MonteCarloMI {
       // Publish the conditioned map
       nav_msgs::OccupancyGrid conditional_map_msg = mi_map_msg;
       for (size_t i = 0; i < mi.size(); i++) {
-        conditional_map_msg.data[i] = 100 * (1 - conditional_vacancy[i]);
+        conditional_map_msg.data[i] = 100 * (1 - conditional_vacancy_viz[i]);
       }
       conditional_map_pub.publish(conditional_map_msg);
     }
@@ -224,7 +233,7 @@ class MonteCarloMI {
     nav_msgs::MapMetaData map_info;
     std_msgs::Header map_header;
     std::vector<double> mi;
-    std::vector<double> vacancy, binary_vacancy, conditional_vacancy;
+    std::vector<double> vacancy, binary_vacancy, conditional_vacancy, conditional_vacancy_viz;
 
     // Line data
     std::vector<unsigned int> line;

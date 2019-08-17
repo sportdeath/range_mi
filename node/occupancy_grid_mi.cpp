@@ -4,7 +4,7 @@
 #include <range_mi/MIGrid.h>
 #include <geometry_msgs/PointStamped.h>
 
-#include "range_mi/grid_mi.hpp"
+#include <range_mi/grid_mi.hpp>
 
 class OccupancyGridMI {
 
@@ -55,7 +55,6 @@ class OccupancyGridMI {
         }
 
         vacancy[i] = std::pow(vacancy[i], map_info.resolution);
-
       }
 
       // Initialize mutual information computation on the grid
@@ -90,7 +89,7 @@ class OccupancyGridMI {
           }
 
           if (theta < 2 * M_PI) {
-            //grid_caster.reset_mi();
+            //mi_computer.reset_mi();
           }
           if (not ros::ok()) break;
         }

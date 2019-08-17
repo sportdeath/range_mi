@@ -1,5 +1,5 @@
-image: noise_passages.png
-resolution: 0.1
+image: bucket.png
+resolution: 0.5
 origin:  [0, 0, 0]
 negate: 0
 occupied_thresh: 1
