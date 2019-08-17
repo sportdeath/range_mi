@@ -6,7 +6,7 @@
 namespace range_mi {
 namespace barely_distorted {
 
-const double noise_l = 999999999;
+const double noise_l = 9e100;
 
 template <unsigned int dimension>
 void line(
