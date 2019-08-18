@@ -59,7 +59,7 @@ void range_mi::GridMI::compute_mi_beam(
 
   // Accumulate the mutual information
   if (noise_dev <= 0) {
-    range_mi::barely_distorted::line<dimension>(
+    range_mi::barely_distorted::line<dimension, lower_bound>(
         line.data(),
         vacancy,
         p_not_measured_.data(),
@@ -115,6 +115,12 @@ void range_mi::GridMI::condition(
 
   // Update the probabilities
   for (unsigned int i = 0; i < p_not_measured_.size(); i++) {
-    p_not_measured_[i] = std::min(p_not_measured_[i], p_not_measured_single[i]);
+    if (lower_bound) {
+      p_not_measured_[i] -= 1 - p_not_measured_single[i];
+    } else {
+      p_not_measured_[i] = std::min(p_not_measured_[i], p_not_measured_single[i]);
+    }
+    p_not_measured_[i] = std::min(p_not_measured_[i], 1.);
+    p_not_measured_[i] = std::max(p_not_measured_[i], 0.);
   }
 }

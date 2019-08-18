@@ -8,7 +8,7 @@ namespace barely_distorted {
 
 const double noise_l = 9e100;
 
-template <unsigned int dimension>
+template <unsigned int dimension, bool lower_bound=true>
 void line(
     const unsigned int * const line,
     const double * const vacancy,
@@ -125,18 +125,30 @@ void line(
       for (int i = 0; i <= k; i++) {
         unsigned int binom =
           factorial[k]/(factorial[i] * factorial[k - i]);
-        miss_distk_info +=
-          binom * w_to_the[k - i] * (distk_info[i] + pnm * w * l * distk[i]);
+
+        if (lower_bound) {
+          miss_distk_info +=
+            pnm * binom * w_to_the[k - i] * (distk_info[i] + w * l * distk[i]);
+        } else {
+          miss_distk_info +=
+            binom * w_to_the[k - i] * (distk_info[i] + pnm * w * l * distk[i]);
+        }
+
         miss_distk +=
           binom * w_to_the[k - i] * distk[i];
       }
       distk_info[k] = p_miss * miss_distk_info;
       distk_info[k] +=
         pnm * l_to_the_neg[k] * (gamma[k + 1] + neg_log_l * gamma[k]);
-      distk_info[k] += (1 - pnm) * l_to_the_neg[k] * gamma[k] * (1 + neg_log_noise_l);
 
       distk[k] = p_miss * miss_distk;
       distk[k] += l_to_the_neg[k] * gamma[k];
+
+      if (lower_bound) {
+        distk_info[k] += (1 - pnm) * distk[k] * (1 + neg_log_noise_l);
+      } else {
+        distk_info[k] += (1 - pnm) * l_to_the_neg[k] * gamma[k] * (1 + neg_log_noise_l);
+      }
     }
 
     // MI += E[R^(n-1)I(R)]dtheta
