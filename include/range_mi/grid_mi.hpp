@@ -64,7 +64,7 @@ public:
   }
 
   static const unsigned int dimension = 2;
-  static const bool lower_bound = false;
+  static const bool lower_bound = true;
 };
 
 }

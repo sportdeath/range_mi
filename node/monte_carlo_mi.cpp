@@ -27,7 +27,7 @@ class MonteCarloMI {
       // Ray tracing parameters
       n.getParam("num_beams", num_beams);
       // Visualization vvv
-      std::string click_condition_topic, mi_map_topic,
+      std::string mi_map_topic,
                   binary_map_topic, conditional_map_topic;
       n.getParam("visualize", visualize);
       n.getParam("visualize_more", visualize_more);
@@ -41,7 +41,7 @@ class MonteCarloMI {
       binary_map_pub = n.advertise<nav_msgs::OccupancyGrid>(binary_map_topic, 1, true);
       conditional_map_pub = n.advertise<nav_msgs::OccupancyGrid>(conditional_map_topic, 1, true);
 
-      // Subscribe to maps and clicked points
+      // Subscribe to the map
       map_sub = n.subscribe(map_topic, 1, &MonteCarloMI::map_callback, this);
     }
 
@@ -64,6 +64,7 @@ class MonteCarloMI {
       // Also initialize a place for randomized and conditional vacancies
       binary_vacancy = std::vector<double>(map_info.height * map_info.width);
       conditional_vacancy = std::vector<double>(map_info.height * map_info.width);
+      cconditional_vacancy = std::vector<double>(map_info.height * map_info.width);
       conditional_vacancy_viz = std::vector<double>(map_info.height * map_info.width);
 
       // And a place for drawing lines
@@ -109,12 +110,45 @@ class MonteCarloMI {
           }
         }
 
+        // Initialize the map to equal the original vacancies
+        for (unsigned int i = 0; i < vacancy.size(); i++) {
+          cconditional_vacancy[i] = vacancy[i];
+        }
+
+        // If we are conditioning
+        if (false) {
+          // Compute a scan at the conditioned point
+          for (int beam = 0; beam < num_beams; beam++) {
+            double theta = beam * (2 * M_PI)/(num_beams);
+            range_mi::grid_line::draw(
+                map_info.height,
+                map_info.width,
+                73.5, 44.5, theta,
+                line.data(),
+                widths.data(),
+                num_cells);
+
+            // Iterate over the beam
+            for (unsigned int i = 0; i < num_cells; i++) {
+              unsigned int line_cell = line[i];
+
+              cconditional_vacancy[line_cell] = binary_vacancy[line_cell];
+
+              // Stop if we have reached an occupied cell
+              if (binary_vacancy[line_cell] == 0) break;
+            }
+          }
+
+          // Compute the entropy of the map
+          map_entropy = entropy(cconditional_vacancy);
+        }
+
         // Given the randomized "ground truth" values compute
         // the result of a scan in the map and how the entropy changed.
         for (unsigned int cell = 0; cell < vacancy.size(); cell++) {
-          // Initialize the map to equal the original vacancies
+          // Initialize the map to equal the conditioned vacancies
           for (unsigned int i = 0; i < vacancy.size(); i++) {
-            conditional_vacancy[i] = vacancy[i];
+            conditional_vacancy[i] = cconditional_vacancy[i];
           }
 
           // For each beam cast rays and update the map
@@ -233,7 +267,7 @@ class MonteCarloMI {
     nav_msgs::MapMetaData map_info;
     std_msgs::Header map_header;
     std::vector<double> mi;
-    std::vector<double> vacancy, binary_vacancy, conditional_vacancy, conditional_vacancy_viz;
+    std::vector<double> vacancy, binary_vacancy, conditional_vacancy, cconditional_vacancy, conditional_vacancy_viz;
 
     // Line data
     std::vector<unsigned int> line;
