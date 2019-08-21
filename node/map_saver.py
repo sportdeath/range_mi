@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
-import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 import rospy
 from nav_msgs.msg import OccupancyGrid
@@ -9,7 +9,7 @@ from nav_msgs.msg import OccupancyGrid
 class MapSaver:
 
     def __init__(self):
-        topic = "/p_not_measured_map"
+        topic = "/mapped"
 
         # Subscribe to vectorized maps
         self.sub = rospy.Subscriber(
@@ -21,17 +21,15 @@ class MapSaver:
     def map_callback(self, map_):
         # Plot the map!
         Z = np.array(map_.data).reshape(map_.info.height, map_.info.width)
-        Z = 255 - Z
-        plt.imshow(Z, origin='lower', cmap='gray')
+        Z = (1 - Z/100.)
+        #Z[np.logical_and(Z < 1, Z > 0)] = 0.5
+        Z = np.flip(Z,0)
+        Z *= 255
+        Z = Z.astype(np.uint8)
 
-        # Get rid of axes
-        plt.box(False)
-        plt.yticks([])
-        plt.xticks([])
-        plt.tick_params(direction='in')
-
-        # Save it!
-        plt.savefig("occupancy_grid.pdf", bbox_inches='tight', pad_inches=-0.03, transparent=False)
+        img = Image.fromarray(Z)
+        img.save('occupancy_grid.png')
+        print("saved!")
 
 if __name__ == "__main__":
     rospy.init_node("map_saver")
