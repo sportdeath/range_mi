@@ -1,5 +1,7 @@
 #include <ros/ros.h>
 
+#include <chrono>
+
 #include <nav_msgs/OccupancyGrid.h>
 #include <range_mi/MIGrid.h>
 #include <geometry_msgs/PointStamped.h>
@@ -68,6 +70,8 @@ class OccupancyGridMI {
     void compute_mi() {
       mi_computer.reset_mi();
 
+      auto start = std::chrono::high_resolution_clock::now();
+
       double spatial_interpolation = 0;
       double theta = 0;
       double dtheta = (2 * M_PI)/num_beams;
@@ -94,6 +98,13 @@ class OccupancyGridMI {
           if (not ros::ok()) break;
         }
       }
+
+      auto end = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double> elapsed = end - start;
+      std::cout << "Ending MI computation" << std::endl;
+      std::cout << "Computing mutual information of a " <<
+        map_info.height << "x" << map_info.width << " map with " <<
+        num_beams << " beams took " << elapsed.count() << "seconds." << std::endl;
 
       if (visualize) draw_map();
       publish_mi();
