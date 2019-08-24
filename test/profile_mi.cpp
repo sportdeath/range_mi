@@ -5,23 +5,13 @@
 
 #include <range_mi/barely_distorted.hpp>
 
+#include "helpers.hpp"
+
 // Define constants
 unsigned int num_iterations = 100000;
 unsigned int num_cells = 100;
 double dtheta = 0.1;
 const unsigned int dimension = 1;
-
-// Initialize random generator
-std::random_device random_device;
-std::mt19937 gen(random_device());
-std::uniform_real_distribution<double> dist(0.,1.);
-
-// ... and a way to make random vectors
-void random_p(std::vector<double> & p) {
-  for (size_t i = 0; i < p.size(); i++) {
-    p[i] = dist(gen);
-  }
-}
 
 int main() {
   // Initialize the inputs and outputs
