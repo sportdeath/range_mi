@@ -7,9 +7,9 @@
 
 // Define constants
 unsigned int num_iterations = 100000;
-unsigned int num_cells = 1000;
+unsigned int num_cells = 100;
 double dtheta = 0.1;
-const unsigned int dimension = 2;
+const unsigned int dimension = 1;
 
 // Initialize random generator
 std::random_device random_device;
