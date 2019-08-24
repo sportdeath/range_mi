@@ -10,7 +10,7 @@
 
 // Define constants
 double integration_step = 0.00001;
-double vacancy_scaling = 10;
+double vacancy_scaling = 0.1;
 double dtheta = 0.1;
 unsigned int num_cells = 100;
 const unsigned int num_dimensions = 5;

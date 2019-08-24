@@ -39,28 +39,29 @@ void range_pdf(
     double v = vacancy[map_index];
     double w = width[line_index];
 
-    // Compute the negative log of the vacancy
-    double l;
+    // Vacancy of one contributes nothing to the pdf
+    if (v >= 1) continue;
+
+    double p_miss, mass, center_of_mass;
     if (v <= 0) {
-      l = 9999999999999999;
-    } else {
-      l = -std::log(v);
-    }
-
-    // Pre-compute the probability of missing
-    // the constant region
-    double p_miss = std::exp(-l * w);
-
-    // The probability mass of a hit
-    double mass = 1 - p_miss;
-
-    // The center of mass
-    // (1 - exp(-l*w))/2 = 1 - exp(-l*com)
-    double center_of_mass;
-    if (l > 0) {
-      center_of_mass = -std::log(0.5 * (1 + p_miss))/l;
-    } else {
+      p_miss = 0;
+      mass = 1;
       center_of_mass = 0;
+    } else {
+      // Compute the negative log of the vacancy
+      double l = -std::log(v);
+
+      // Pre-compute the probability of missing
+      // the constant region
+      p_miss = std::exp(-l * w);
+
+      // The probability mass of a hit
+      mass = 1 - p_miss;
+
+      // The center of mass
+      // (1 - exp(-l*w))/2 = 1 - exp(-l*com)
+      center_of_mass =  -std::log(0.5 * (1 + p_miss))/l;
+      // Note that l > 0 because v < 1
     }
 
     double z = -noise_half_width;
@@ -266,6 +267,7 @@ void line(
 
     // MI += E[R^(n-1)I(R)]dtheta
     double mi = distk_info[dimension - 1] * dtheta;
+    //output[map_index] = mi; continue;
     // MI -= E[I(N)]E[R^(n-1)]dtheta
     mi -= distk_info_noise[0] * distk[dimension - 1] * dtheta;
     if (dimension == 3) {

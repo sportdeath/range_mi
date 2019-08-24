@@ -9,13 +9,13 @@
 #include "helpers.hpp"
 
 // Define constants
-double integration_step = 0.01;
+double integration_step = 0.0005;
 double dtheta = 0.1;
 unsigned int num_cells = 100;
-double vacancy_scaling = 10;
+double vacancy_scaling = 0.1;
 double noise_dev = 4;
 double noise_half_width = noise_dev * 4;
-double noise_integration_step = 0.01;
+double noise_integration_step = 0.0005;
 unsigned int num_dimensions = 3;
 
 double numerical_mi_distorted(
@@ -30,7 +30,7 @@ double numerical_mi_distorted(
 
   double h_Z = 0;
   for (unsigned int i = 0; i < pdf_distorted_size; i++) {
-    double r = i * integration_step;
+    double r = i * integration_step - noise_half_width;
 
     h_Z +=
       pdf_distorted[i] *

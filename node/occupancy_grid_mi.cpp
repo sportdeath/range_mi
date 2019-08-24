@@ -24,6 +24,10 @@ class OccupancyGridMI {
       // Ray tracing parameters
       n.getParam("num_beams", num_beams);
       n.getParam("condition_steps", condition_steps);
+      // Noise parameters
+      n.getParam("noise_dev", noise_dev);
+      n.getParam("noise_truncation", noise_truncation);
+      n.getParam("noise_integration_step", noise_integration_step);
       // Visualization vvv
       std::string click_condition_topic, mi_map_topic, p_not_measured_map_topic;
       n.getParam("visualize", visualize);
@@ -62,7 +66,10 @@ class OccupancyGridMI {
       // Initialize mutual information computation on the grid
       mi_computer = range_mi::GridMI(
           map_info.height,
-          map_info.width);
+          map_info.width,
+          noise_dev,
+          noise_dev * noise_truncation,
+          noise_integration_step);
 
       compute_mi();
     }
@@ -170,6 +177,11 @@ class OccupancyGridMI {
     int num_beams;
     int condition_steps;
     bool visualize, visualize_more;
+
+    // Noise parameters
+    double noise_dev;
+    double noise_truncation;
+    double noise_integration_step;
 
     // Map data
     nav_msgs::MapMetaData map_info;
