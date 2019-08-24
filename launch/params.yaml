@@ -6,6 +6,10 @@ reset_condition_topic: "/reset_condition_mi"
 num_beams: 600
 condition_steps: 50000
 
+noise_dev: 0
+noise_truncation: 4 # Number of dev before truncation
+noise_integration_step: 0.25
+
 visualize: true
 visualize_more: false
 mi_map_topic: "/mi_map"
