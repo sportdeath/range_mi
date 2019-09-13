@@ -267,7 +267,6 @@ void line(
 
     // MI += E[R^(n-1)I(R)]dtheta
     double mi = distk_info[dimension - 1] * dtheta;
-    //output[map_index] = mi; continue;
     // MI -= E[I(N)]E[R^(n-1)]dtheta
     mi -= distk_info_noise[0] * distk[dimension - 1] * dtheta;
     if (dimension == 3) {

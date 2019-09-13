@@ -108,7 +108,7 @@ int main() {
     }
   }
 
-  std::cout << "Computing the barely distorted mutual information numerically..." << std::endl;
+  std::cout << "Computing the distorted mutual information numerically..." << std::endl;
 
   std::vector<double> numerical_mi_(num_dimensions);
   for (unsigned int i = 0; i < num_dimensions; i++) {
@@ -123,7 +123,7 @@ int main() {
         integration_step);
   }
 
-  std::cout << "Computing the barely distorted mutual information exactly..." << std::endl;
+  std::cout << "Computing the distorted mutual information exactly..." << std::endl;
 
   std::vector<double> exact_mi(num_dimensions, 0);
   std::vector<double> mi(num_cells);

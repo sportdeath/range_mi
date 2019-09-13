@@ -9,7 +9,7 @@
 #include "helpers.hpp"
 
 // Define constants
-double integration_step = 0.00001;
+double integration_step = 0.000001;
 double vacancy_scaling = 0.1;
 double dtheta = 0.1;
 unsigned int num_cells = 100;
@@ -118,6 +118,8 @@ int main() {
 
   std::cout << std::endl;
   for (unsigned int i = 0; i < num_dimensions; i++) {
-    std::cout << "d" << i + 1 << ": " << numerical_mi_[i] << ", " << exact_mi[i] << std::endl;
+    std::cout << "d" << i + 1 << ": " << numerical_mi_[i] << ", " << exact_mi[i] <<
+      ", difference: " << std::abs(numerical_mi_[i] - exact_mi[i]) <<
+      std::endl;
   }
 }
