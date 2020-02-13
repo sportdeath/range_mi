@@ -1,5 +1,5 @@
 image: building_31_incomplete.png
-resolution: 1
+resolution: 0.05
 origin:  [0, 0, 0]
 negate: 0
 occupied_thresh: 1

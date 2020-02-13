@@ -1,5 +1,5 @@
 image: classroom_incomplete.png
-resolution: 1
+resolution: 0.03
 origin:  [0, 0, 0]
 negate: 0
 occupied_thresh: 1
