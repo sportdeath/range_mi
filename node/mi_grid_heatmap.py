@@ -6,6 +6,9 @@ import numpy as np
 import rospy
 from range_mi.msg import MIGrid
 
+"""
+Save mutual information surfaces to images.
+"""
 class MIGridHeatmap:
 
     def __init__(self):
@@ -33,6 +36,7 @@ class MIGridHeatmap:
         plt.savefig("mi_grid.pdf", bbox_inches='tight', pad_inches=-0.03, transparent=False)
         plt.colorbar()
         plt.savefig("mi_grid_colorbar.pdf", bbox_inches='tight', pad_inches=0, transparent=False)
+        print("Made map!")
 
 if __name__ == "__main__":
     rospy.init_node("mi_grid_heatmap")

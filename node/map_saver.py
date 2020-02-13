@@ -6,6 +6,9 @@ from PIL import Image
 import rospy
 from nav_msgs.msg import OccupancyGrid
 
+"""
+Save ROS maps to images.
+"""
 class MapSaver:
 
     def __init__(self):
@@ -22,7 +25,7 @@ class MapSaver:
         # Plot the map!
         Z = np.array(map_.data).reshape(map_.info.height, map_.info.width)
         Z = (1 - Z/100.)
-        #Z[np.logical_and(Z < 1, Z > 0)] = 0.5
+        # Z[np.logical_or(Z < 1, Z > 0)] = 0.5
         Z = np.flip(Z,0)
         Z *= 255
         Z = Z.astype(np.uint8)

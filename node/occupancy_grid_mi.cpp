@@ -16,11 +16,9 @@ class OccupancyGridMI {
       n = ros::NodeHandle("~");
 
       // Fetch the ROS parameters
-      std::string map_topic, mi_topic, condition_topic, reset_condition_topic;
+      std::string map_topic, mi_topic;
       n.getParam("map_topic", map_topic);
       n.getParam("mi_topic", mi_topic);
-      n.getParam("condition_topic", condition_topic);
-      n.getParam("reset_condition_topic", reset_condition_topic);
       // Ray tracing parameters
       n.getParam("num_beams", num_beams);
       n.getParam("condition_steps", condition_steps);
@@ -29,17 +27,17 @@ class OccupancyGridMI {
       n.getParam("noise_truncation", noise_truncation);
       n.getParam("noise_integration_step", noise_integration_step);
       // Visualization vvv
-      std::string click_condition_topic, mi_map_topic, p_not_measured_map_topic;
+      std::string click_condition_topic, mi_map_topic, conditional_map_topic;
       n.getParam("visualize", visualize);
       n.getParam("visualize_more", visualize_more);
       n.getParam("click_condition_topic", click_condition_topic);
       n.getParam("mi_map_topic", mi_map_topic);
-      n.getParam("p_not_measured_map_topic", p_not_measured_map_topic);
+      n.getParam("conditional_map_topic", conditional_map_topic);
 
       // Construct a publisher for mutual information
       mi_pub = n.advertise<range_mi::MIGrid>(mi_topic, 1, true);
       mi_map_pub = n.advertise<nav_msgs::OccupancyGrid>(mi_map_topic, 1, true);
-      p_not_measured_map_pub = n.advertise<nav_msgs::OccupancyGrid>(p_not_measured_map_topic, 1, true);
+      conditional_map_pub = n.advertise<nav_msgs::OccupancyGrid>(conditional_map_topic, 1, true);
 
       // Subscribe to maps and clicked points
       map_sub = n.subscribe(map_topic, 1, &OccupancyGridMI::map_callback, this);
@@ -61,6 +59,9 @@ class OccupancyGridMI {
         }
 
         vacancy[i] = std::pow(vacancy[i], map_info.resolution);
+        //if (vacancy[i] > 0 and vacancy[i] < 1)  {
+          //vacancy[i] = 0.99;
+        //}
       }
 
       // Initialize mutual information computation on the grid
@@ -160,10 +161,10 @@ class OccupancyGridMI {
       mi_map_pub.publish(mi_map_msg);
 
       // Do the same with p not measured
-      nav_msgs::OccupancyGrid p_not_measured_map_msg = mi_map_msg;
-      for (size_t i = 0; i < p_not_measured_map_msg.data.size(); i++)
-        p_not_measured_map_msg.data[i] = 100 * (1 - mi_computer.p_not_measured()[i]);
-      p_not_measured_map_pub.publish(p_not_measured_map_msg);
+      nav_msgs::OccupancyGrid conditional_map_msg = mi_map_msg;
+      for (size_t i = 0; i < conditional_map_msg.data.size(); i++)
+        conditional_map_msg.data[i] = 100 * (1 - mi_computer.p_not_measured()[i]);
+      conditional_map_pub.publish(conditional_map_msg);
     }
 
   private:
@@ -171,7 +172,7 @@ class OccupancyGridMI {
     ros::Subscriber map_sub, click_sub;
     ros::Publisher mi_pub,
       mi_map_pub,
-      p_not_measured_map_pub;
+      conditional_map_pub;
 
     // Parameters
     int num_beams;

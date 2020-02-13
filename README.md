@@ -37,6 +37,18 @@ Clone the library into your catkin workspace:
     cd ~/catkin_ws
     catkin_make
 
+Then to compute the mutual information of an occupancy grid, you can run:
+
+    roslaunch range_mi occupancy_grid_mi.launch
+
+In ```rviz``` the occupancy grid map will be displayed on the topic ```/map``` and the mutual information surface will be displayed on the topic ```/mi_map```. The topics names, number of range measurement beams and other parameters are available in the ```launch/params.yaml``` file. By running the ```node/mi_grid_heatmap.py``` script, the mutual information surface can be saved as colored image like the one above.
+
+By using the "Publish Point" tooltip in ```rviz```, you can click on a point in the map to condition the mutual information on a measurement being made at that point. This will likely reduce the information gain within the view of the clicked point.
+
+We have also included another script to compute the mutual information by averaging the information gain over random assigments of occupancy. This will take much longer than the included algorithm, but it will eventually converge to the same result. Run it on a map as follows:
+
+    roslaunch range_mi monte_carlo_mi.launch
+
 ## API
 
 A basic demonstration of how this code can be used for computing 2D mutual information surfaces is found in ```test/api_demi.cpp```. Run it as described above in the "Without ROS" section.
