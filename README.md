@@ -24,12 +24,9 @@ To build the tests you can add a flag to ```cmake``` before making:
     cmake -DBUILD_TESTS=ON ..
     make
 
-The tests can then be run as follows:
+To run a test, for example the ```test/api_demo.cpp``` test, execute:
 
     ./test/api_demo
-    ./test/profile_mi
-    ./test/numerical_mi
-    ./test/numerical_mi_distorted
 
 ### With ROS
 
