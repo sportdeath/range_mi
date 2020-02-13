@@ -1,10 +1,10 @@
 # Range Mutual Information
 
 This package defines functions that compute the amount of information that is expected to be gained about an incomplete occupancy map from a potential range measurement. Range measurement sources could include lidar, sonar, depth cameras, etc. Below is an example output produced by this code.
+The package can be built standalone or as a ROS library.
 
 ![mi_surface](https://live.staticflickr.com/65535/49493728457_f33ba30d11_o_d.png)
 
-The package can be built standalone or as a ROS library.
 
 ## Usage
 
@@ -24,8 +24,9 @@ To build the tests you can add a flag to ```cmake``` before making:
     cmake -DBUILD_TESTS=ON ..
     make
 
-The provided tests compare the accuracy of the provided algorithms to numerical integration as well as providing a timing benchmark. Run them as follows:
+The tests can then be run as follows:
 
+    ./test/api_demo
     ./test/profile_mi
     ./test/numerical_mi
     ./test/numerical_mi_distorted
@@ -41,12 +42,4 @@ Clone the library into your catkin workspace:
 
 ## API
 
-template <unsigned int dimension, bool lower_bound=true>
-void line(
-    const unsigned int * const line,
-    const double * const vacancy,
-    const double * const p_not_measured,
-    const double * const width,
-    unsigned int num_cells,
-    double dtheta,
-    double * const output);
+A basic demonstration of how this code can be used for computing 2D mutual information surfaces is found in ```test/api_demi.cpp```. Run it as described above in the "Without ROS" section.
