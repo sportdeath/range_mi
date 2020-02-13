@@ -1,3 +1,13 @@
+/**
+ * This test file computes the mutual information
+ * using the provided algorithm as well as numerical
+ * integration and presents the differences between the
+ * two results. The range measurement is assumed to be
+ * distorted with Gaussian noise.
+ *
+ * The results are presented for dimensions 1 through 3.
+ */
+
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -151,6 +161,9 @@ int main() {
 
   std::cout << std::endl;
   for (unsigned int i = 0; i < num_dimensions; i++) {
-    std::cout << "d" << i + 1 << ": " << numerical_mi_[i] << ", " << exact_mi[i] << std::endl;
+    std::cout << "d" << i + 1 << ": " << numerical_mi_[i] << ", " << exact_mi[i] <<
+      ", difference: " << std::abs(numerical_mi_[i] - exact_mi[i]) <<
+      " or " << 100 * std::abs(numerical_mi_[i] - exact_mi[i])/exact_mi[i] << "%" <<
+      std::endl;
   }
 }

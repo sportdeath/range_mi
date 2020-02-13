@@ -1,3 +1,10 @@
+/**
+ * This test computes the mutual information
+ * of a large number of random beams to determine
+ * the average time spent computing mutual information
+ * per cell
+ */
+
 #include <vector>
 #include <random>
 #include <chrono>
