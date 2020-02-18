@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from grid_mi import map_to_mi
+from grid_mi import grid_mi
 
 # Create an occupancy map
 map_ = np.array(
@@ -16,4 +16,4 @@ map_ = np.array(
 num_beams = 200
 
 # Compute!
-print(map_to_mi(map_, num_beams))
+print(grid_mi(map_, num_beams))
