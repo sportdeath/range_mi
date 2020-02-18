@@ -41,6 +41,10 @@ public:
       double dtheta,
       double & spatial_interpolation);
 
+  void compute_mi(
+      const double * const vacancy,
+      unsigned int num_beams);
+
   void condition(
       const double * const vacancy,
       double x,

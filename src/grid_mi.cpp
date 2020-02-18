@@ -82,6 +82,36 @@ void range_mi::GridMI::compute_mi_beam(
   }
 }
 
+void range_mi::GridMI::compute_mi(
+    const double * const vacancy,
+    unsigned int num_beams) {
+
+  // Iterate over beams spanning across the map
+  double spatial_interpolation = 0;
+  double theta = 0;
+  double dtheta = (2 * M_PI)/num_beams;
+  while (theta < 2 * M_PI) {
+
+    // Compute the mutual information along
+    // the beam in direction "theta", translated
+    // by "spatial_interpolation". The spatial_interpolation
+    // is updated by the compute_mi_beam function.
+    compute_mi_beam(
+        vacancy,
+        theta,
+        dtheta,
+        spatial_interpolation);
+
+    // Check to see if the spatial interpolation has
+    // wrapped back to zero.
+    if (spatial_interpolation == 0) {
+      // If so, move to the next beam
+      theta += dtheta;
+    }
+  }
+}
+
+
 void range_mi::GridMI::condition(
     const double * const vacancy,
     double x,
