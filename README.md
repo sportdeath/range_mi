@@ -24,11 +24,11 @@ To build the tests you can add a flag to ```cmake``` before making:
     cmake -DBUILD_TESTS=ON ..
     make
 
-To run a test, for example the ```test/api_demo.cpp``` test, execute:
+To run a test, for example the ```test/demo.cpp``` test, execute:
 
-    ./test/api_demo
+    ./test/demo
 
-Taking a look at the ```test/api_demo.cpp``` script is a good place to start to understand the API for computing 2D mutual information surfaces.
+The other test cases compare the output of the algorithm to numerical integration and benchmark speed.
 
 ### Python API
 
@@ -40,7 +40,7 @@ Then compile the python library (requires ```cython```):
 
     python setup.py build_ext --inplace
 
-This builds a function ```grid_mi``` that simply takes as input a 2D occupancy map and returns a 2D mutual information surface (both numpy arrays).
+This builds a function ```grid_mi``` that simply takes as input a 2D occupancy map and returns a 2D mutual information surface (both numpy arrays). A simple demo is included in the ```pysrc/demo.py``` file.
 
 ### ROS Demo Nodes
 

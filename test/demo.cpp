@@ -36,29 +36,8 @@ unsigned int num_beams = 200;
 // Initialize the mutual information computation device
 range_mi::GridMI mi_computer(height, width);
 
-// Iterate over beams spanning across the map
-double spatial_interpolation = 0;
-double theta = 0;
-double dtheta = (2 * M_PI)/num_beams;
-while (theta < 2 * M_PI) {
-
-  // Compute the mutual information along
-  // the beam in direction "theta", translated
-  // by "spatial_interpolation". The spatial_interpolation
-  // is updated by the compute_mi_beam function.
-  mi_computer.compute_mi_beam(
-      vacancy.data(),
-      theta,
-      dtheta,
-      spatial_interpolation);
-
-  // Check to see if the spatial interpolation has
-  // wrapped back to zero.
-  if (spatial_interpolation == 0) {
-    // If so, move to the next beam
-    theta += dtheta;
-  }
-}
+// Compute the mutual information
+mi_computer.compute_mi(vacancy.data(), num_beams);
 
 // Print out the mutual information map
 std::cout << "Mutual information surface: " << std::endl;
