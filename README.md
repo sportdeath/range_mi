@@ -8,7 +8,7 @@ The package can be built standalone or as a ROS library.
 
 ## Usage
 
-### Without ROS
+### C++ API
 
 Clone the library and build with ```cmake```:
 
@@ -30,7 +30,19 @@ To run a test, for example the ```test/api_demo.cpp``` test, execute:
 
 Taking a look at the ```test/api_demo.cpp``` script is a good place to start to understand the API for computing 2D mutual information surfaces.
 
-### With ROS
+### Python API
+
+After building the C++ library as described above also install the library:
+
+    sudo make install
+
+Then compile the python library (requires ```cython```):
+
+    python setup.py build_ext --inplace
+
+This builds a function ```grid_mi``` that simply takes as input a 2D occupancy map and returns a 2D mutual information surface (both numpy arrays).
+
+### ROS Demo Nodes
 
 Clone the library into your catkin workspace:
 

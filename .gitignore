@@ -5,3 +5,6 @@ build
 *.png
 *.yaml
 *.pgm
+
+pysrc/*.so
+pysrc/*.cpp
