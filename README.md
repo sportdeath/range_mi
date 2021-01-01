@@ -3,6 +3,8 @@
 This package defines functions that compute the amount of information that is expected to be gained about an incomplete occupancy map from a potential range measurement. Range measurement sources could include lidar, sonar, depth cameras, etc. Below is an example output produced by this code.
 The package can be built standalone or as a ROS library.
 
+For more information on the algorithm see the related [ICRA 2020 publication](https://ieeexplore.ieee.org/document/9196592) and for an earlier but more detailed overview see [my MEng thesis](https://dspace.mit.edu/handle/1721.1/124248).
+
 ![mi_surface](https://live.staticflickr.com/65535/49493728457_f33ba30d11_o_d.png)
 
 
